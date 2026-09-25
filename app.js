@@ -90,12 +90,13 @@ const tbody = document.querySelector('#changes');
 for (const c of changes) {
   const tr = document.createElement('tr');
   tr.dataset.id = c.id;
+  tr.dataset.viewruleKey = c.address;
   tr.innerHTML =
-    '<td><code>' + c.address + '</code></td>' +
-    '<td>' + c.type + '</td>' +
-    '<td><span class="action ' + c.action + '">' + c.action + '</span></td>' +
-    '<td>' + summary(c) + '</td>' +
-    '<td><span class="risk ' + c.risk + '">' + c.risk + '</span></td>';
+    '<td data-viewrule="cell"><code data-viewrule="label">' + c.address + '</code></td>' +
+    '<td data-viewrule="cell">' + c.type + '</td>' +
+    '<td data-viewrule="cell"><span class="action ' + c.action + '">' + c.action + '</span></td>' +
+    '<td data-viewrule="cell">' + summary(c) + '</td>' +
+    '<td data-viewrule="cell"><span class="risk ' + c.risk + '">' + c.risk + '</span></td>';
   tr.addEventListener('click', () => select(c.id));
   tbody.appendChild(tr);
 }

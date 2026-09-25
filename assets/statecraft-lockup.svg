@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 240" role="img" aria-labelledby="title desc">
+<title id="title">Statecraft</title><desc id="desc">Layered state mark and Statecraft wordmark</desc>
+<defs><linearGradient id="mint" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#63ead1"/><stop offset="1" stop-color="#1bb981"/></linearGradient><linearGradient id="blue" x1="0" x2="1"><stop stop-color="#31a7ff"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs>
+<rect width="960" height="240" rx="28" fill="#081220"/>
+<g transform="translate(44 42)"><path d="M82 0 164 42 82 84 0 42Z" fill="url(#mint)"/><path d="M82 58 164 100 82 142 0 100Z" fill="url(#blue)"/><path d="M82 116 164 158 82 200 0 158Z" fill="#d8eefb"/></g>
+<text x="250" y="130" fill="#f7fbff" font-family="Inter,ui-sans-serif,system-ui,sans-serif" font-size="78" font-weight="750" letter-spacing="-3">Statecraft</text>
+<text x="254" y="174" fill="#9fb2c7" font-family="Inter,ui-sans-serif,system-ui,sans-serif" font-size="22">Infrastructure change, understood.</text>
+</svg>

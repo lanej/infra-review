@@ -1,12 +1,12 @@
-# Infra Workbench — Product Definition
+# Statecraft — Product Definition
 
 ## Purpose
 
-Infra Workbench is the primary workbench for infrastructure changes attached to a GitHub pull request.
+Statecraft is the primary workbench for infrastructure changes attached to a GitHub pull request.
 
 It is where infrastructure changes are **planned, diagnosed, understood, assessed, discussed, approved, applied, verified, and—when necessary—reverted**.
 
-GitHub remains the source of change identity and code history. Atlantis remains the planning and execution engine. Infra Workbench provides the infrastructure-specific model and interface needed to work a change through its lifecycle.
+GitHub remains the source of change identity and code history. Atlantis remains the planning and execution engine. Statecraft provides the infrastructure-specific model and interface needed to work a change through its lifecycle.
 
 The unit of work is a GitHub pull request. A review may contain multiple independently planned infrastructure roots.
 
@@ -84,9 +84,9 @@ A newer plan may invalidate an earlier approval. Staleness must be explicit.
 
 ### Approve or request changes
 
-> When I have completed my assessment, let me approve or request changes from Infra Workbench, with my decision bound to the exact commit and plan version I reviewed.
+> When I have completed my assessment, let me approve or request changes from Statecraft, with my decision bound to the exact commit and plan version I reviewed.
 
-Infra Workbench is intended to become the primary human approval interface. A future GitHub App may act on behalf of authenticated users while preserving reviewer identity and auditability.
+Statecraft is intended to become the primary human approval interface. A future GitHub App may act on behalf of authenticated users while preserving reviewer identity and auditability.
 
 ### Apply the change
 
@@ -124,13 +124,13 @@ A revert is not a magical rollback. It creates a new proposed change with its ow
 4. Partial planning cannot appear equivalent to a complete review.
 5. Derived findings and summaries retain links to their evidence.
 6. Raw plan and execution logs remain available even when higher-level explanations exist.
-7. Human approval belongs in Infra Workbench.
+7. Human approval belongs in Statecraft.
 8. Automatic approval does not. External policy and GitHub automation may determine that human approval is unnecessary.
 9. GitHub remains authoritative for source changes and repository identity.
 10. Atlantis remains authoritative for Terraform/OpenTofu planning and execution.
 11. A successful apply is distinct from a verified outcome.
 12. Reverts use the same planning, assessment, approval, execution, and verification controls as forward changes.
-13. Infra Workbench is not a general-purpose infrastructure administration console.
+13. Statecraft is not a general-purpose infrastructure administration console.
 
 ## Workbench surfaces
 
@@ -147,7 +147,7 @@ Selecting a resource, finding, graph node, change, or execution error should con
 
 ## Future direction: assisted diagnosis and remediation
 
-Infra Workbench should eventually be able to help move failed or risky changes toward a better state, not merely explain them.
+Statecraft should eventually be able to help move failed or risky changes toward a better state, not merely explain them.
 
 A future assisted-diagnostics/remediation capability could combine:
 
@@ -166,7 +166,7 @@ This capability is explicitly out of scope for the initial foundation. The curre
 
 ## Explicit non-goals
 
-Infra Workbench does not initially:
+Statecraft does not initially:
 
 - provide a general-purpose editor for infrastructure configuration;
 - replace GitHub as the source repository or code history;

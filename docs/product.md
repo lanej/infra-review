@@ -145,6 +145,25 @@ The primary experience should expose projections of the same underlying change m
 
 Selecting a resource, finding, graph node, change, or execution error should converge on the same underlying objects and evidence rather than creating isolated experiences.
 
+## Future direction: assisted diagnosis and remediation
+
+Infra Workbench should eventually be able to help move failed or risky changes toward a better state, not merely explain them.
+
+A future assisted-diagnostics/remediation capability could combine:
+
+- structured plan and apply failures;
+- Atlantis execution logs;
+- normalized resource and relationship context;
+- policy findings;
+- repository source and GitHub history;
+- prior failures and successful fixes;
+- organization-specific instructions and skill files;
+- LLM reasoning over that evidence.
+
+The initial goal would be **assistance rather than autonomous mutation**: diagnose likely causes, surface relevant precedent, suggest concrete fixes, and prepare a proposed source change for human review. Repeated failure/fix history should become useful product data rather than disappearing into old PRs and logs.
+
+This capability is explicitly out of scope for the initial foundation. The current architecture should preserve the evidence and history required to support it later without introducing an LLM or remediation subsystem now.
+
 ## Explicit non-goals
 
 Infra Workbench does not initially:
@@ -152,7 +171,7 @@ Infra Workbench does not initially:
 - provide a general-purpose editor for infrastructure configuration;
 - replace GitHub as the source repository or code history;
 - replace Atlantis as the plan/apply executor;
-- autonomously decide to approve a change;
+- autonomously decide to approve a change;\n- automatically diagnose, edit, or remediate infrastructure changes in the initial implementation;
 - provide a privileged rollback mechanism that bypasses review;
 - become a cloud resource administration portal.
 

@@ -1,8 +1,8 @@
-# Infra Workbench
+<p align="center"><img src="./assets/statecraft-lockup.svg" alt="Statecraft" width="720"></p>\n\n# Statecraft
 
-**Understand, debug, and approve infrastructure changes.**
+****Infrastructure change, understood.**\n\nUnderstand, debug, and approve infrastructure changes.**
 
-Infra Workbench is an experimental workbench for infrastructure changes attached to GitHub pull requests. It is intended to become the primary place to work a change from planning through verification: understand what will happen across multiple infrastructure roots, investigate the dependency graph, assess policy and operational risk, diagnose Atlantis failures, collaborate with reviewers, and approve the exact plan being applied.
+Statecraft is an experimental workbench for infrastructure changes attached to GitHub pull requests. It is intended to become the primary place to work a change from planning through verification: understand what will happen across multiple infrastructure roots, investigate the dependency graph, assess policy and operational risk, diagnose Atlantis failures, collaborate with reviewers, and approve the exact plan being applied.
 
 > **Status:** early prototype. The current UI runs against synthetic OpenTofu state and plan fixtures. GitHub and Atlantis integration, the Go/Connect backend, durable history, and authenticated approval flows are not implemented yet.
 
@@ -24,7 +24,7 @@ A revert is another infrastructure change, not a privileged undo operation. It s
 
 ## Jobs to be done
 
-Infra Workbench is organized around the work required to safely move an infrastructure change through its lifecycle.
+Statecraft is organized around the work required to safely move an infrastructure change through its lifecycle.
 
 | Job | What the workbench should make possible |
 | --- | --- |
@@ -46,17 +46,17 @@ The detailed statements and product invariants live in [docs/product.md](./docs/
 
 A GitHub pull request is the unit of work. One pull request may affect many independently planned infrastructure roots.
 
-1. **Discover roots.** Infra Workbench determines which roots are affected and tracks each independently.
+1. **Discover roots.** Statecraft determines which roots are affected and tracks each independently.
 2. **Plan.** Atlantis produces plans and logs. Failed roots stay visible and actionable rather than disappearing into PR comments.
 3. **Assemble a PlanSet.** Successful root plans form one immutable proposal identified by the Git commit and root-plan digests.
 4. **Review.** The workbench presents a semantic change hierarchy, directed resource graph, findings, evidence, execution history, and reviewer state.
 5. **Discuss and revise.** Concerns attach to infrastructure objects. A new commit or plan creates a new proposal and makes affected prior approvals visibly stale.
-6. **Approve.** Human decisions happen in Infra Workbench and bind to the exact PlanSet reviewed. A future GitHub App will synchronize those decisions while preserving reviewer identity.
+6. **Approve.** Human decisions happen in Statecraft and bind to the exact PlanSet reviewed. A future GitHub App will synchronize those decisions while preserving reviewer identity.
 7. **Apply.** Atlantis remains the execution engine. Plan and apply attempts, errors, and logs stay part of the same change history.
 8. **Verify.** The workbench records whether the intended resulting state was observed rather than treating exit code zero as sufficient proof.
 9. **Revert when necessary.** A revert references the prior change but produces a new PlanSet and follows the same assessment and approval path.
 
-Automatic approval is deliberately outside the product boundary. External policy or GitHub automation may decide that a human review is unnecessary; Infra Workbench does not make that decision itself.
+Automatic approval is deliberately outside the product boundary. External policy or GitHub automation may decide that a human review is unnecessary; Statecraft does not make that decision itself.
 
 ## The workbench
 
@@ -84,7 +84,7 @@ GitHub                           Atlantis
                   |
                   v
         +----------------------+
-        | Infra Workbench API  |
+        | Statecraft API  |
         | Go + Connect         |
         +----------+-----------+
                    |

@@ -55,7 +55,7 @@ GitHub                           Atlantis
                   |
                   v
         +-------------------+
-        | Infra Workbench API  |
+        | Statecraft API  |
         | Go + Connect      |
         +---------+---------+
                   |
@@ -74,7 +74,7 @@ The frontend does not consume raw OpenTofu/Terraform or Atlantis representations
 
 ### Repository
 
-A GitHub repository installed/configured for Infra Workbench.
+A GitHub repository installed/configured for Statecraft.
 
 ### Review
 
@@ -270,4 +270,4 @@ That keeps the product capable of evolving independently while preserving the cu
 
 - GitHub owns code and repository identity.
 - Atlantis executes plans and applies.
-- Infra Workbench owns infrastructure-specific human review, diagnosis, and approval.
+- Statecraft owns infrastructure-specific human review, diagnosis, and approval.

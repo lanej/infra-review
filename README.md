@@ -29,3 +29,11 @@ The UI is generated from:
 - Keep Atlantis/GitHub authoritative; this is initially a read-only review surface.
 
 This is deliberately dependency-free. If the interaction model holds up, the next step is replacing the fixture inputs with Atlantis post-plan artifacts and moving the view into EasyUI components.
+
+
+## Product direction
+
+The prototype is evolving into the primary review, diagnosis, and human approval interface for infrastructure changes attached to GitHub pull requests.
+
+- [Product definition and jobs to be done](./docs/product.md)
+- [Architecture and domain model](./docs/architecture.md)

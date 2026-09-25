@@ -13,7 +13,7 @@ GitHub                           Atlantis
                   |
                   v
         +-------------------+
-        | Infra Review API  |
+        | Infra Workbench API  |
         | Go + Connect      |
         +---------+---------+
                   |
@@ -32,7 +32,7 @@ The frontend does not consume raw OpenTofu/Terraform or Atlantis representations
 
 ### Repository
 
-A GitHub repository installed/configured for Infra Review.
+A GitHub repository installed/configured for Infra Workbench.
 
 ### Review
 
@@ -48,7 +48,7 @@ Owns:
 - reviewers and decisions;
 - findings;
 - graph;
-- execution history.
+- execution history;\n- verification state;\n- revert lineage.
 
 ### Root
 
@@ -146,7 +146,7 @@ The frontend owns interaction state and presentation:
 - finding investigation;
 - approval/request-changes interactions;
 - execution/log exploration;
-- plan history and comparison.
+- plan history and comparison;\n- verification state;\n- revert preparation and lineage.
 
 The graph must be designed for hundreds or thousands of resources. It should not assume that rendering the entire graph is useful.
 
@@ -228,4 +228,4 @@ That keeps the product capable of evolving independently while preserving the cu
 
 - GitHub owns code and repository identity.
 - Atlantis executes plans and applies.
-- Infra Review owns infrastructure-specific human review, diagnosis, and approval.
+- Infra Workbench owns infrastructure-specific human review, diagnosis, and approval.

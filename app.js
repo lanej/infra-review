@@ -8,7 +8,8 @@ const stateByAddress = new Map(stateResources.map(r => [r.address, r]));
 
 const changes = (plan.resource_changes || []).map((c, id) => {
   const actions = c.change.actions || [];
-  const action = actions.includes('delete') && actions.includes('create') ? 'replace' : (actions[0] || 'no-op');
+  const rawAction = actions.includes('delete') && actions.includes('create') ? 'replace' : (actions[0] || 'no-op');
+  const action = rawAction === 'update' ? 'modify' : rawAction;
   const before = c.change.before || {};
   const after = c.change.after || {};
   const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])]

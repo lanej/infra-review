@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Infra Review</title><link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<aside class="sidebar"><div class="brand">◈ <span>Infra Review</span></div><nav>
+<a class="active">Pull Requests <span class="badge">3</span></a><a>Deployments</a><a>Services</a><a>Resources</a><a>Environments</a><a>Policies</a><a>Cost</a>
+</nav></aside>
+<main>
+<header class="topbar"><div>Pull Requests / <strong>#1842</strong></div><div class="search">Search resources, services, or PRs…</div></header>
+<section class="hero"><div><div class="title-row"><h1>#1842 Increase API capacity and tighten DB access</h1><span class="pill purple">Needs review</span></div>
+<p>Add worker nodes for API, restrict database access to private subnet, and update monitoring.</p>
+<div class="meta">alexdoe · 7 commits · main → feature/api-scaling · production · 4 projects</div></div>
+<div class="actions"><button>View in GitHub</button><button>Re-run analysis</button></div></section>
+<div class="tabs"><button class="tab active">Overview</button><button class="tab">Changes <span id="tab-count"></span></button><button class="tab">Infrastructure Graph</button><button class="tab">Policy & Security</button><button class="tab">Cost</button><button class="tab">Plan Output</button></div>
+<section class="cards">
+<article class="card"><div class="kpi" id="resource-count">—</div><div>Resources changed</div><div class="micro" id="action-summary"></div></article>
+<article class="card danger"><div class="kpi" id="attention-count">—</div><div>Require attention</div><div class="micro" id="attention-summary"></div></article>
+<article class="card"><div class="kpi">+$412</div><div>Estimated monthly cost</div><div class="micro good">+18%</div></article>
+<article class="card"><div class="kpi">Passed</div><div>Policy checks</div><div class="micro">3 warnings · 0 failures</div></article>
+</section>
+<section class="workspace">
+<article class="panel graph-panel"><div class="panel-head"><div><h2>Infrastructure Change Graph</h2><p>Changed resources and key relationships</p></div><select><option>Show 2 levels</option><option>Show 1 level</option></select></div><div id="graph" class="graph"></div></article>
+<article class="panel details-panel"><div class="panel-head"><div><h2>Resource Details</h2><p id="detail-position"></p></div></div><div id="details"></div></article>
+</section>
+<section class="panel table-panel"><div class="panel-head"><h2>Changed Resources (<span id="table-count">0</span>)</h2></div>
+<table><thead><tr><th>Address</th><th>Type</th><th>Action</th><th>Summary</th><th>Risk</th></tr></thead><tbody id="changes"></tbody></table></section>
+</main><script type="module" src="./app.js"></script>
+</body></html>

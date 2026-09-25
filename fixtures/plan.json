@@ -1,0 +1,23 @@
+{
+  "format_version":"1.2",
+  "terraform_version":"1.9.8",
+  "resource_changes":[
+    {"address":"azurerm_kubernetes_cluster.api","mode":"managed","type":"azurerm_kubernetes_cluster","name":"api","change":{"actions":["update"],"before":{"name":"ep-api","node_count":3,"sku_tier":"Standard"},"after":{"name":"ep-api","node_count":5,"sku_tier":"Standard"}}},
+    {"address":"azurerm_network_security_rule.api","mode":"managed","type":"azurerm_network_security_rule","name":"api","change":{"actions":["update"],"before":{"name":"api-ingress","source_address_prefix":"10.0.0.0/8","destination_port_range":"443"},"after":{"name":"api-ingress","source_address_prefix":"10.42.0.0/16","destination_port_range":"443"}}},
+    {"address":"azurerm_postgresql_flexible_server.main","mode":"managed","type":"azurerm_postgresql_flexible_server","name":"main","change":{"actions":["delete","create"],"before":{"name":"ep-api-db-prod","sku_name":"Standard_D4s_v3","storage_mb":524288,"version":"14","public_network_access_enabled":true},"after":{"name":"ep-api-db-prod","sku_name":"Standard_D4s_v3","storage_mb":1048576,"version":"14","public_network_access_enabled":false}}},
+    {"address":"azurerm_monitor_diagnostic_setting.api","mode":"managed","type":"azurerm_monitor_diagnostic_setting","name":"api","change":{"actions":["create"],"before":null,"after":{"name":"api-diagnostics-v2","enabled_log":["Audit","PostgreSQLLogs"]}}},
+    {"address":"azurerm_private_endpoint.db","mode":"managed","type":"azurerm_private_endpoint","name":"db","change":{"actions":["create"],"before":null,"after":{"name":"ep-api-db-pe-v2","subnet_id":"private-db"}}},
+    {"address":"azurerm_storage_account.api","mode":"managed","type":"azurerm_storage_account","name":"api","change":{"actions":["update"],"before":{"name":"epapistorage","account_tier":"Standard"},"after":{"name":"epapistorage","account_tier":"Premium"}}},
+    {"address":"azurerm_redis_cache.api","mode":"managed","type":"azurerm_redis_cache","name":"api","change":{"actions":["update"],"before":{"name":"ep-api-cache","capacity":2},"after":{"name":"ep-api-cache","capacity":3}}},
+    {"address":"azurerm_key_vault.api","mode":"managed","type":"azurerm_key_vault","name":"api","change":{"actions":["update"],"before":{"name":"ep-api-kv","purge_protection_enabled":false},"after":{"name":"ep-api-kv","purge_protection_enabled":true}}},
+    {"address":"azurerm_monitor_action_group.legacy","mode":"managed","type":"azurerm_monitor_action_group","name":"legacy","change":{"actions":["delete"],"before":{"name":"legacy-alerts"},"after":null}}
+  ],
+  "configuration":{"root_module":{"resources":[
+    {"address":"azurerm_kubernetes_cluster.api","expressions":{"gateway":{"references":["azurerm_application_gateway.edge.id"]}}},
+    {"address":"azurerm_network_security_rule.api","expressions":{"cluster":{"references":["azurerm_kubernetes_cluster.api.id"]}}},
+    {"address":"azurerm_postgresql_flexible_server.main","expressions":{"cluster":{"references":["azurerm_kubernetes_cluster.api.id"]}}},
+    {"address":"azurerm_storage_account.api","expressions":{"db":{"references":["azurerm_postgresql_flexible_server.main.id"]}}},
+    {"address":"azurerm_monitor_diagnostic_setting.api","expressions":{"db":{"references":["azurerm_postgresql_flexible_server.main.id"]}}},
+    {"address":"azurerm_private_endpoint.db","expressions":{"db":{"references":["azurerm_postgresql_flexible_server.main.id"]}}}
+  ]}}
+}

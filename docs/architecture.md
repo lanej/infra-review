@@ -2,6 +2,48 @@
 
 This document establishes the initial boundaries for implementing the product defined in [product.md](./product.md).
 
+## Architectural style
+
+Use a hexagonal (ports-and-adapters) architecture.
+
+The domain must understand concepts such as repositories, reviews, roots, plans, execution attempts, approvals, logs, and source changes, but it must not encode GitHub or Atlantis objects as those concepts.
+
+GitHub and Atlantis are required initial integrations, not architectural boundaries.
+
+Core application logic should depend on ports such as:
+
+```text
+SourceControl
+  GetChange
+  GetCommit
+  GetDiff
+  GetReviewers
+  PublishDecision
+  PublishStatus
+
+Planner
+  DiscoverRoots
+  GetPlanAttempts
+  GetPlanArtifact
+  GetExecutionLogs
+
+Executor
+  Apply
+  GetApplyAttempts
+  GetExecutionLogs
+
+PolicyEvaluator
+  GetFindings
+
+IdentityProvider
+  ResolveActor
+  Authorize
+```
+
+Initial adapters implement these ports using GitHub and Atlantis. Provider-specific identifiers and raw payloads may be retained as evidence and integration metadata, but they should not leak into core domain behavior or frontend contracts.
+
+This boundary should make it possible to replace or add source-control, planning, execution, policy, and identity integrations without redesigning the review model.
+
 ## System boundaries
 
 ```text
@@ -176,7 +218,7 @@ The backend owns:
 - findings and policy results;
 - review/approval state;
 - audit history;
-- API authorization.
+- API authorization;\n- durable evidence/history suitable for future assisted diagnostics and remediation.
 
 The backend should preserve raw artifacts separately from normalized projections so normalization can evolve without losing evidence.
 
@@ -222,7 +264,7 @@ This is directional, not yet a protobuf contract.
 
 ## Integration principle
 
-GitHub and Atlantis are adapters around the domain model, not the domain model itself.
+GitHub and Atlantis are adapters around the domain model, not the domain model itself. Integration code should live at the hexagonal boundary behind explicit ports rather than being called directly from domain services.
 
 That keeps the product capable of evolving independently while preserving the current operating contract:
 

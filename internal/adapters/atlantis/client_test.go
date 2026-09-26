@@ -3,9 +3,9 @@ package atlantis
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/lanej/statecraft/internal/domain"

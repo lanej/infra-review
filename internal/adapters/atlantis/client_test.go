@@ -2,8 +2,8 @@ package atlantis
 
 import (
 	"context"
-	"strings"
 	"encoding/json"
+	"strings"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -65,8 +65,8 @@ func TestPlanMapsProjectResults(t *testing.T) {
 		BaseBranch:  "main",
 		PullRequest: 42,
 		Roots: []domain.RootSelector{
-			{ID: "root-api", ProjectName: "api", Directory: "prod/api", Workspace: "default"},
-			{ID: "root-db", ProjectName: "db", Directory: "prod/db", Workspace: "default"},
+			{ID: "root-api", PlannerRef: "api", Directory: "prod/api", Workspace: "default"},
+			{ID: "root-db", PlannerRef: "db", Directory: "prod/db", Workspace: "default"},
 		},
 	})
 	if err != nil {
@@ -98,7 +98,7 @@ func TestApplyWebhookMapsToDomain(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.Repository.FullName() != "acme/infra" || got.PullRequest != 42 || got.Root.ProjectName != "api" || !got.Success {
+	if got.Repository.FullName() != "acme/infra" || got.PullRequest != 42 || got.Root.PlannerRef != "api" || !got.Success {
 		t.Fatalf("notification = %#v", got)
 	}
 }

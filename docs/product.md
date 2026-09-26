@@ -10,6 +10,28 @@ GitHub remains the source of change identity and code history. Atlantis remains 
 
 The unit of work is a GitHub pull request. A review may contain multiple independently planned infrastructure roots.
 
+This document describes the intended product, not a list of shipped capabilities.
+The [roadmap](roadmap.md) owns feature status and delivery order; the
+[handoff](handoff.md) describes the current mock implementation.
+
+## People and decisions
+
+| Person / responsibility | Decision the workbench should support |
+| --- | --- |
+| Change author | Is the complete proposal available, what failed, and what source correction or evidence is needed next? |
+| Infrastructure reviewer | What will change, who or what may be affected, what remains unknown, and is this exact proposal acceptable? |
+| Policy or resource owner | Does this rule permit accepting this violation, and are the rationale, recovery evidence, scope and duration sufficient? |
+| Operator / incident responder | What actually executed, what state now exists, what remains uncertain, and what is the next justified recovery action? |
+
+These are responsibilities, not hard-coded production roles. Authorization and any
+required separation of duties come from trusted organization policy. The mock
+personas demonstrate a workflow without defining that production policy.
+
+The interface should answer five questions before a consequential decision:
+**What am I deciding? What evidence covers it? What could happen? What is still
+unknown or blocking? What happens after I act?** Display confidence and provenance
+with the conclusion; an attractive summary is not evidence by itself.
+
 ## Change lifecycle
 
 ```text
@@ -195,7 +217,8 @@ Statecraft does not initially:
 - provide a general-purpose editor for infrastructure configuration;
 - replace GitHub as the source repository or code history;
 - replace Atlantis as the plan/apply executor;
-- autonomously decide to approve a change;\n- automatically diagnose, edit, or remediate infrastructure changes in the initial implementation;
+- autonomously decide to approve a change;
+- automatically diagnose, edit, or remediate infrastructure changes in the initial implementation;
 - provide a privileged rollback mechanism that bypasses review;
 - become a cloud resource administration portal.
 

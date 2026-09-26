@@ -1,8 +1,11 @@
 # Policies, violations, and acceptance
 
-This is the design contract for the next policy integration. The current runtime
-still uses mock findings; the policy ports, OPA adapter, persistence, and acceptance
-actions described here are not implemented yet.
+This is the target design contract for policy integration. The mock workbench now
+implements `PolicyEvaluator` and `ActionPolicy` ports, normalized assessment and
+acceptance models, and the request → owner authorization → plan approval flow.
+The OPA adapter, authenticated actor/role enforcement, durable evidence and audit
+persistence, policy distribution, and production execution remain future work.
+See [the runnable scope](./steel-thread.md) for its deliberate limitations.
 
 Statecraft owns the meaning of a policy assessment and the decisions made from it.
 OPA evaluates Rego behind an adapter, just as GitHub and Atlantis supply their
@@ -38,7 +41,7 @@ Workflow authorization asks: **May this actor perform this action, given the cur
 evidence and requirements?** The same OPA adapter may supply both, but their inputs
 and outputs should have separate typed contracts.
 
-Proposed outbound ports, to be introduced alongside their application use cases:
+Outbound ports now exercised by the mock application use case:
 
 ```text
 PolicyEvaluator
@@ -48,13 +51,19 @@ ActionPolicy
   EvaluateAction(ActionPolicyInput) -> ActionDecision
 ```
 
-`PlanPolicyInput` contains a schema version, PlanSet identity, expected root scope,
-normalized resource changes and relationships, evidence coverage, PolicySet
+The current Go inputs are a normalized `Review` and explicit `Now`; the action
+input additionally carries an action and violation ID. `ActionDecision` currently
+contains an action, outcome, and human-readable reason. These are the mock subset,
+not authenticated production policy contracts. [R4 in the roadmap](roadmap.md#r4--opa-assessment-and-workflow-policies)
+expands them alongside trusted evidence and identity.
+
+The target `PlanPolicyInput` must contain a schema version, PlanSet identity,
+expected root scope, normalized resource changes and relationships, evidence coverage, PolicySet
 identity, and versioned reference facts. Unknown relationships or redacted values
 are explicit; the evaluator must not infer completeness from an empty collection.
 
-`ActionPolicyInput` contains the intended action (run plan, approve plan, accept a
-violation, apply), exact target/scope, authenticated actor, current evaluation,
+The target `ActionPolicyInput` must contain the intended action (run plan, approve
+plan, accept a violation, apply), exact target/scope, authenticated actor, current evaluation,
 current approval and acceptance records, and authoritative external requirements.
 The application assembles these inputs from trusted services and stores. It does
 not trust role claims, acceptance status, or policy selection supplied by the UI.
@@ -64,8 +73,8 @@ and expected roots before a PlanSet exists; approval and apply target an exact
 PlanSet; acceptance targets specified violations. Planning must not depend on an
 assessment that only planning can produce.
 
-An ActionDecision has an outcome of `permitted`, `denied`, or `indeterminate`, plus
-typed requirements and reasons. A requirement identifies its source, scope,
+The target ActionDecision has an outcome of `permitted`, `denied`, or
+`indeterminate`, plus typed requirements and reasons. A requirement identifies its source, scope,
 fulfillment evidence, and who can resolve it. No generic query string or arbitrary
 engine JSON is exposed through either port. Published contracts use Statecraft
 types; raw engine results are retained separately as evidence.
@@ -198,6 +207,6 @@ the evidence, and the active acceptance together. A separate PlanSet approval is
 still required if the workflow policy calls for one; an expired acceptance blocks
 apply even if that approval remains in history.
 
-The next interactive design should exercise a hard prohibition, an advisory
-violation, a permitted acceptance, an unauthorized acceptance request, a policy
-revision after approval, and an expired acceptance immediately before apply.
+The mock already exercises advisory violations, permitted acceptance, and expired
+acceptance before apply. Extend it with hard prohibitions, unauthorized/denied
+acceptance, revocation, and policy or reference-data revisions after approval.

@@ -4,9 +4,20 @@
 
 Statecraft is an experimental workbench for infrastructure changes attached to GitHub pull requests. It is intended to become the primary place to work a change from planning through verification: understand what will happen across multiple infrastructure roots, investigate the dependency graph, assess policy and operational risk, diagnose Atlantis failures, collaborate with reviewers, and approve the exact plan being applied.
 
-> **Status:** early prototype. A TypeScript → Go mock-backed steel thread and initial GitHub/Atlantis adapters now exist, but the production integrations are not wired into the runtime. Durable plan evidence/history, Connect-generated handlers, GitHub App authentication, and authenticated approval flows remain to be implemented.
+> **Status:** early prototype. The TypeScript → Go workbench supports mock planning, resource inspection, policy acceptance, approval, apply, and verification. GitHub and Atlantis-native-HTTP adapters exist but are not wired into the runtime. Durable plan evidence/history, Connect-generated handlers, GitHub App authentication, and authenticated approval flows remain to be implemented.
 
-**[Open the prototype](https://lanej.io/infra-review/)** · **[Product definition](./docs/product.md)** · **[Architecture](./docs/architecture.md)** · **[Integrations](./docs/integrations.md)** · **[Policy design](./docs/policies.md)**
+**[Open the legacy prototype](https://lanej.io/infra-review/)** · **[Product definition](./docs/product.md)** · **[Architecture](./docs/architecture.md)** · **[Integrations](./docs/integrations.md)** · **[Policy design](./docs/policies.md)**
+
+## Continue development
+
+Start with [AGENTS.md](./AGENTS.md) and the [agent handoff](./docs/handoff.md).
+The [roadmap](./docs/roadmap.md) records implemented features, required capabilities,
+dependencies, completion criteria, and open decisions. The recommended next slice
+is generated Connect transport while preserving the current mock workflow.
+
+Product intent lives in [docs/product.md](./docs/product.md); interaction and visual
+rules live in [DESIGN.md](./DESIGN.md). The current app is `web/` plus the Go API.
+The separately hosted root-level prototype is a historical composition reference.
 
 ## Change lifecycle
 
@@ -47,7 +58,7 @@ The detailed statements and product invariants live in [docs/product.md](./docs/
 A GitHub pull request is the unit of work. One pull request may affect many independently planned infrastructure roots.
 
 1. **Discover roots.** Statecraft determines which roots are affected and tracks each independently.
-2. **Plan.** Atlantis produces plans and logs. Failed roots stay visible and actionable rather than disappearing into PR comments.
+2. **Plan.** Statecraft calls Atlantis's native HTTP API for plan execution and captures the resulting evidence. Failed roots stay visible and actionable rather than disappearing into PR comments; comments are not the integration API.
 3. **Assemble a PlanSet.** Successful root plans form one immutable proposal identified by the Git commit and root-plan digests.
 4. **Review.** The workbench presents a semantic change hierarchy, directed resource graph, findings, evidence, execution history, and reviewer state.
 5. **Discuss and revise.** Concerns attach to infrastructure objects. A new commit or plan creates a new proposal and makes affected prior approvals visibly stale.
@@ -78,8 +89,8 @@ The intended implementation separates a **TypeScript frontend** from a **Go + Co
 ```text
 GitHub                           Atlantis
   |                                |
-  | PRs, commits, identity         | plans, applies, logs
-  | reviews, checks                |
+  | PRs, commits, identity         | native HTTP API
+  | reviews, checks                | plan/apply; locks/drift later
   +---------------+----------------+
                   |
                   v
@@ -105,7 +116,7 @@ OPA/Rego is the intended policy integration behind the same adapter boundary.
 Statecraft models policies, evaluations, violations, scoped acceptance, and action
 eligibility independently of the engine. Acceptance preserves a violation and is
 separate from approving a plan. This boundary and workflow are specified in
-[docs/policies.md](./docs/policies.md); the policy runtime is not implemented yet.
+[docs/policies.md](./docs/policies.md); the workbench exercises those ports with deterministic mock policies; the OPA adapter remains to be implemented.
 
 See [docs/architecture.md](./docs/architecture.md) for the initial domain and service boundaries.
 
@@ -122,9 +133,9 @@ A future assisted workflow could use that history plus LLM reasoning to:
 
 That is intentionally out of scope now. The near-term requirement is to retain enough structured evidence and history that this capability can be added later without redesigning the system.
 
-## Current prototype
+## Legacy static prototype
 
-The deployed prototype is deliberately dependency-free and uses synthetic data:
+The original root-level prototype is dependency-free and uses synthetic data:
 
 - `fixtures/state.json` — mock current OpenTofu state;
 - `fixtures/plan.json` — mock JSON plan;
@@ -138,7 +149,8 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080`.
 
-The prototype exists to validate the review interaction model. The implementation now has a mock-backed TypeScript/Go steel thread plus GitHub and Atlantis adapters behind domain ports. The next steps are generated Connect wiring and durable plan/evidence ingestion.
+Keep this prototype as a composition reference. New workflow development belongs in
+`web/` and the Go services, following the [roadmap](./docs/roadmap.md).
 
 ## Design principles
 
@@ -170,8 +182,10 @@ npm ci
 npm run dev
 ```
 
-The browser loads review `pr-1842` through the backend rather than importing
-fixture JSON. See [docs/steel-thread.md](./docs/steel-thread.md).
+The browser creates an isolated review session through the backend. The workflow
+selector includes incomplete plans, stale approvals, expired acceptance, and partial
+apply recovery. All decisions and execution are simulated; no credentials are
+required. See [docs/steel-thread.md](./docs/steel-thread.md).
 
 The protobuf/Connect contract lives in `proto/statecraft/v1/review.proto`.
 Run `make generate` with Buf installed to generate Go and TypeScript bindings;

@@ -8,9 +8,13 @@ service ReviewService {
   rpc GetReview(GetReviewRequest) returns (GetReviewResponse);
 }
 
-message GetReviewRequest { string review_id = 1; }
+message GetReviewRequest {
+  string review_id = 1;
+}
 
-message GetReviewResponse { Review review = 1; }
+message GetReviewResponse {
+  Review review = 1;
+}
 
 message Review {
   string id = 1;
@@ -23,12 +27,25 @@ message Review {
   repeated Change changes = 8;
   repeated Finding findings = 9;
   repeated ReviewDecision decisions = 10;
+  bool demo = 11;
+  uint64 version = 12;
+  string scenario = 13;
+  PlanSnapshot plan = 14;
+  PolicyEvaluation policy = 15;
+  repeated ViolationAcceptance acceptances = 16;
+  repeated ExecutionRecord attempts = 17;
+  repeated ReviewEvent history = 18;
+  repeated PlanSnapshot plan_history = 19;
+  repeated ActionDecision actions = 20;
+  string verification = 21;
 }
 
 message Root {
   string id = 1;
   string name = 2;
   string status = 3;
+  string apply_status = 4;
+  string log = 5;
 }
 
 message Change {
@@ -39,6 +56,12 @@ message Change {
   string action = 5;
   string risk = 6;
   string summary = 7;
+  string name = 8;
+  repeated PropertyChange properties = 9;
+  repeated ResourceRelationship relationships = 10;
+  string plan_text = 11;
+  string source_path = 12;
+  string source_text = 13;
 }
 
 message Finding {
@@ -58,4 +81,134 @@ message ReviewDecision {
   string commit_sha = 5;
   string external_id = 6;
   string source = 7;
+  string evaluation_id = 8;
+  string message = 9;
+}
+
+message PropertyChange {
+  string name = 1;
+  string before = 2;
+  string after = 3;
+}
+
+message ResourceRelationship {
+  string resource_id = 1;
+  string label = 2;
+  string kind = 3;
+  string evidence = 4;
+}
+
+message PlanSnapshot {
+  string id = 1;
+  int32 number = 2;
+  string commit_sha = 3;
+  string digest = 4;
+  repeated string root_ids = 5;
+  string created_at = 6;
+  repeated string change_ids = 7;
+}
+
+message PolicyResult {
+  string id = 1;
+  string version = 2;
+  string title = 3;
+  string outcome = 4;
+}
+
+message PolicyViolation {
+  string id = 1;
+  string policy_id = 2;
+  string policy_version = 3;
+  string resource_id = 4;
+  string title = 5;
+  string severity = 6;
+  bool blocking = 7;
+  bool acceptance_allowed = 8;
+  string explanation = 9;
+  string consequence = 10;
+  string unknown = 11;
+  repeated string evidence = 12;
+}
+
+message PolicyEvaluation {
+  string id = 1;
+  string plan_set_id = 2;
+  string policy_set_id = 3;
+  string status = 4;
+  string coverage = 5;
+  string evaluated_at = 6;
+  repeated PolicyResult results = 7;
+  repeated PolicyViolation violations = 8;
+}
+
+message ViolationAcceptance {
+  string id = 1;
+  string violation_id = 2;
+  string plan_set_id = 3;
+  string evaluation_id = 4;
+  string policy_version = 5;
+  string status = 6;
+  string requested_by = 7;
+  string authorized_by = 8;
+  string reason = 9;
+  string evidence = 10;
+  string created_at = 11;
+  string expires_at = 12;
+}
+
+message ActionDecision {
+  string action = 1;
+  string outcome = 2;
+  string reason = 3;
+}
+
+message WorkflowCommand {
+  string action = 1;
+  uint64 expected_version = 2;
+  string violation_id = 3;
+  string reason = 4;
+  string evidence = 5;
+}
+
+message ExecutionRecord {
+  string id = 1;
+  string plan_set_id = 2;
+  string root_id = 3;
+  string operation = 4;
+  string status = 5;
+  string created_at = 6;
+  string log = 7;
+}
+
+message ReviewEvent {
+  string title = 1;
+  string detail = 2;
+  string created_at = 3;
+}
+
+// Isolated simulation only. No production execution adapters are composed here.
+service DemoWorkflowService {
+  rpc CreateDemo(CreateDemoRequest) returns (CreateDemoResponse);
+  rpc GetDemo(GetDemoRequest) returns (GetDemoResponse);
+  rpc ActOnDemo(ActOnDemoRequest) returns (ActOnDemoResponse);
+}
+message CreateDemoRequest {
+  string scenario = 1;
+}
+message ActOnDemoRequest {
+  string review_id = 1;
+  WorkflowCommand command = 2;
+}
+
+message CreateDemoResponse {
+  Review review = 1;
+}
+message GetDemoRequest {
+  string review_id = 1;
+}
+message GetDemoResponse {
+  Review review = 1;
+}
+message ActOnDemoResponse {
+  Review review = 1;
 }

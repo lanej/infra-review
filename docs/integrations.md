@@ -8,8 +8,10 @@ TypeScript contracts use Statecraft types.
 
 Research checked 2026-09-25 against GitHub's REST documentation, go-github v92.0.0,
 and Atlantis v0.48.0. The adapters are implemented and tested with local HTTP
-servers. The executable still composes the mock `ReviewStore`: no production
-credentials, GitHub writes, or Atlantis plan/apply calls are enabled by this PR.
+servers. The executable composes the isolated mock workflow and store: no production
+credentials, GitHub writes, or Atlantis plan/apply calls are enabled. The
+[handoff](handoff.md) maps the running code; the [roadmap](roadmap.md) describes the
+evidence, identity, policy, and execution work needed to connect these adapters.
 
 ## Client choices and compatibility
 
@@ -89,11 +91,28 @@ evidence explicitly and counts only approval records bound to the displayed
 commit and a plan set, excluding stale or unbound records. Other decision kinds
 retain their own labels. This presentation count is not plan-set authorization.
 
-## Atlantis: execution commands and notifications
+## Atlantis: native HTTP API
 
-The same adapter implements the `Planner` and `Executor` ports. It authenticates
-with `X-Atlantis-Token`; the server must configure `api-secret` to enable command
+Statecraft integrates with Atlantis through Atlantis's own HTTP API. It does **not**
+parse pull-request comments or scrape the Atlantis UI to plan, apply, or determine
+execution state. Pull-request comments remain human-facing source-control evidence;
+they are not the execution integration contract.
+
+The same adapter implements the `Planner` and `Executor` ports against
+`POST /api/plan` and `POST /api/apply`. It authenticates with
+`X-Atlantis-Token`; the server must configure `api-secret` to enable command
 endpoints. The adapter owns HTTP DTOs, not Atlantis Go server types.
+
+Atlantis also exposes adjacent native API surfaces including `GET /api/locks` and
+authenticated drift detection/status/remediation endpoints. Statecraft does not
+currently expose those through domain ports; add them only when a concrete use case
+requires lock or drift semantics. Their existence means Statecraft can extend the
+same Atlantis adapter rather than inventing a GitHub-comment protocol.
+
+The Atlantis API is explicitly documented as **alpha**: request and response schemas
+may change without a deprecation period. Treat the adapter as an anti-corruption
+layer, pin/test the supported Atlantis version, and never leak its wire schema into
+the Statecraft domain or frontend.
 
 | Statecraft input/output | Atlantis wire shape |
 | --- | --- |

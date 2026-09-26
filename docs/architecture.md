@@ -69,7 +69,8 @@ separate simulation capability, not an alternative production execution path.
 ```text
 GitHub                                  Atlantis
   |                                        |
-  | PRs, commits, reviews, checks          | plan/apply commands
+  | PRs, commits, reviews, checks          | native HTTP API
+  |                                        | plan/apply; later locks/drift
   |                                        | workflow evidence/webhooks
   +------------------+---------------------+
                      |
@@ -92,6 +93,13 @@ GitHub                                  Atlantis
 The frontend never consumes GitHub, Atlantis, OPA decision documents, or raw
 OpenTofu/Terraform representations as its application model. OPA evaluates policies
 through outbound domain ports; Statecraft services enforce the resulting decisions.
+
+Atlantis is an execution-system adapter, not a GitHub-comment parser. Statecraft uses
+Atlantis's native HTTP API for command integration and keeps that alpha wire contract
+inside the adapter. GitHub remains authoritative for source-change and review context;
+Atlantis remains authoritative for command/execution context. Future lock or drift
+capabilities should extend the same adapter behind domain ports rather than introducing
+a comment-scraping control path.
 
 ## Domain model
 

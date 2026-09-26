@@ -4,9 +4,9 @@
 
 Statecraft is an experimental workbench for infrastructure changes attached to GitHub pull requests. It is intended to become the primary place to work a change from planning through verification: understand what will happen across multiple infrastructure roots, investigate the dependency graph, assess policy and operational risk, diagnose Atlantis failures, collaborate with reviewers, and approve the exact plan being applied.
 
-> **Status:** early prototype. The current UI runs against synthetic OpenTofu state and plan fixtures. GitHub and Atlantis integration, the Go/Connect backend, durable history, and authenticated approval flows are not implemented yet.
+> **Status:** early prototype. A TypeScript → Go mock-backed steel thread and initial GitHub/Atlantis adapters now exist, but the production integrations are not wired into the runtime. Durable plan evidence/history, Connect-generated handlers, GitHub App authentication, and authenticated approval flows remain to be implemented.
 
-**[Open the prototype](https://lanej.io/infra-review/)** · **[Product definition](./docs/product.md)** · **[Architecture](./docs/architecture.md)**
+**[Open the prototype](https://lanej.io/infra-review/)** · **[Product definition](./docs/product.md)** · **[Architecture](./docs/architecture.md)** · **[Integrations](./docs/integrations.md)**
 
 ## Change lifecycle
 
@@ -132,7 +132,7 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080`.
 
-The prototype exists to validate the review interaction model. The next implementation step is establishing the TypeScript frontend and Go/Connect backend around the domain model, then replacing fixture inputs with GitHub and Atlantis adapters.
+The prototype exists to validate the review interaction model. The implementation now has a mock-backed TypeScript/Go steel thread plus GitHub and Atlantis adapters behind domain ports. The next steps are generated Connect wiring and durable plan/evidence ingestion.
 
 ## Design principles
 
@@ -143,3 +143,31 @@ The prototype exists to validate the review interaction model. The next implemen
 - **Failures are first-class.** Planning and application errors belong beside the change they prevented or interrupted.
 - **Evidence survives abstraction.** Summaries, findings, and future AI assistance always lead back to source evidence.
 - **Integrations stay at the boundary.** GitHub and Atlantis are adapters behind explicit ports.
+
+
+## Development
+
+The current steel thread separates the TypeScript frontend from a Go backend and
+uses a mock adapter behind the domain port.
+
+The Go module is `github.com/lanej/statecraft` and the frontend package is
+`statecraft`. Use Go 1.26 or later (required by the pinned GitHub client) and
+Node.js 22.6 or later for development and the frontend regression tests.
+
+```sh
+# terminal 1
+make api
+
+# terminal 2
+cd web
+npm ci
+npm run dev
+```
+
+The browser loads review `pr-1842` through the backend rather than importing
+fixture JSON. See [docs/steel-thread.md](./docs/steel-thread.md).
+
+The protobuf/Connect contract lives in `proto/statecraft/v1/review.proto`.
+Run `make generate` with Buf installed to generate Go and TypeScript bindings;
+the runnable thread retains a temporary JSON bridge until those generated handlers
+are committed.

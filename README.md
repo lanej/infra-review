@@ -1,6 +1,6 @@
-<p align="center"><img src="./assets/statecraft-lockup.svg" alt="Statecraft" width="720"></p>\n\n# Statecraft
+<p align="center"><img src="./assets/statecraft-lockup.svg" alt="Statecraft" width="720"></p>
 
-****Infrastructure change, understood: Understand, debug, and approve infrastructure changes.**
+**Infrastructure change, understood: Understand, debug, and approve infrastructure changes.**
 
 Statecraft is an experimental workbench for infrastructure changes attached to GitHub pull requests. It is intended to become the primary place to work a change from planning through verification: understand what will happen across multiple infrastructure roots, investigate the dependency graph, assess policy and operational risk, diagnose Atlantis failures, collaborate with reviewers, and approve the exact plan being applied.
 

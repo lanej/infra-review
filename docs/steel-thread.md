@@ -4,7 +4,8 @@ The runnable TypeScript → Go thread lets a reviewer inspect a multi-root propo
 and exercise plan, policy acceptance, approval, apply, and verification decisions.
 The scenario selector creates a new isolated session; reset starts that scenario
 over. Reloading the same browser tab resumes its session while the server remains
-running.
+running. See the [handoff](handoff.md) for code locations and [roadmap](roadmap.md)
+for the next implementation slices.
 
 ## Run
 

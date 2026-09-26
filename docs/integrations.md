@@ -8,8 +8,10 @@ TypeScript contracts use Statecraft types.
 
 Research checked 2026-09-25 against GitHub's REST documentation, go-github v92.0.0,
 and Atlantis v0.48.0. The adapters are implemented and tested with local HTTP
-servers. The executable still composes the mock `ReviewStore`: no production
-credentials, GitHub writes, or Atlantis plan/apply calls are enabled by this PR.
+servers. The executable composes the isolated mock workflow and store: no production
+credentials, GitHub writes, or Atlantis plan/apply calls are enabled. The
+[handoff](handoff.md) maps the running code; the [roadmap](roadmap.md) describes the
+evidence, identity, policy, and execution work needed to connect these adapters.
 
 ## Client choices and compatibility
 

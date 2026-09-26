@@ -6,7 +6,18 @@ Statecraft is an experimental workbench for infrastructure changes attached to G
 
 > **Status:** early prototype. The TypeScript → Go workbench supports mock planning, resource inspection, policy acceptance, approval, apply, and verification. GitHub/Atlantis adapters exist but are not wired into the runtime. Durable plan evidence/history, Connect-generated handlers, GitHub App authentication, and authenticated approval flows remain to be implemented.
 
-**[Open the prototype](https://lanej.io/infra-review/)** · **[Product definition](./docs/product.md)** · **[Architecture](./docs/architecture.md)** · **[Integrations](./docs/integrations.md)** · **[Policy design](./docs/policies.md)**
+**[Open the legacy prototype](https://lanej.io/infra-review/)** · **[Product definition](./docs/product.md)** · **[Architecture](./docs/architecture.md)** · **[Integrations](./docs/integrations.md)** · **[Policy design](./docs/policies.md)**
+
+## Continue development
+
+Start with [AGENTS.md](./AGENTS.md) and the [agent handoff](./docs/handoff.md).
+The [roadmap](./docs/roadmap.md) records implemented features, required capabilities,
+dependencies, completion criteria, and open decisions. The recommended next slice
+is generated Connect transport while preserving the current mock workflow.
+
+Product intent lives in [docs/product.md](./docs/product.md); interaction and visual
+rules live in [DESIGN.md](./DESIGN.md). The current app is `web/` plus the Go API.
+The separately hosted root-level prototype is a historical composition reference.
 
 ## Change lifecycle
 
@@ -122,9 +133,9 @@ A future assisted workflow could use that history plus LLM reasoning to:
 
 That is intentionally out of scope now. The near-term requirement is to retain enough structured evidence and history that this capability can be added later without redesigning the system.
 
-## Current prototype
+## Legacy static prototype
 
-The deployed prototype is deliberately dependency-free and uses synthetic data:
+The original root-level prototype is dependency-free and uses synthetic data:
 
 - `fixtures/state.json` — mock current OpenTofu state;
 - `fixtures/plan.json` — mock JSON plan;
@@ -138,7 +149,8 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080`.
 
-The prototype exists to validate the review interaction model. The implementation now has a mock-backed TypeScript/Go steel thread plus GitHub and Atlantis adapters behind domain ports. The next steps are generated Connect wiring and durable plan/evidence ingestion.
+Keep this prototype as a composition reference. New workflow development belongs in
+`web/` and the Go services, following the [roadmap](./docs/roadmap.md).
 
 ## Design principles
 

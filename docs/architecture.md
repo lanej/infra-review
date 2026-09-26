@@ -1,7 +1,9 @@
 # Architecture
 
 This document establishes the implementation boundaries for the product defined in
-[product.md](./product.md).
+[product.md](./product.md). The [handoff](handoff.md) identifies the implemented
+subset; the [roadmap](roadmap.md) orders the remaining work. Domain vocabulary and
+system diagrams below describe the target unless explicitly marked current.
 
 ## Architectural style
 
@@ -62,7 +64,7 @@ now exercises these ports through `DemoWorkflow`; it has no access to the live
 `Planner`, `Executor`, or `SourceControl` ports. `DemoPlanner` is intentionally a
 separate simulation capability, not an alternative production execution path.
 
-## System boundaries
+## Target system boundaries
 
 ```text
 GitHub                                  Atlantis
@@ -91,7 +93,13 @@ The frontend never consumes GitHub, Atlantis, OPA decision documents, or raw
 OpenTofu/Terraform representations as its application model. OPA evaluates policies
 through outbound domain ports; Statecraft services enforce the resulting decisions.
 
-## Initial domain model
+## Domain model
+
+The runnable mock uses `Review`, `PlanSnapshot`, basic policy/acceptance records,
+and simulated attempts. Canonical PlanSets, full immutable historical assessments,
+durable evidence and several entities below still need implementation. In
+particular, a synthetic `PlanSnapshot.Digest` is not the artifact identity described
+by the target PlanSet contract.
 
 ### Repository
 

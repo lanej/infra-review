@@ -170,6 +170,7 @@ func reviewDecision(review *gh.PullRequestReview) domain.ExternalReviewDecision 
 		Actor:     review.GetUser().GetLogin(),
 		Decision:  decision,
 		CommitSHA: review.GetCommitID(),
+		PlanSetID: planSetIDFromBody(review.GetBody()),
 		Body:      review.GetBody(),
 		URL:       review.GetHTMLURL(),
 		Source:    "github",
@@ -191,4 +192,19 @@ func githubReviewEvent(decision string) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported review decision %q", decision)
 	}
+}
+
+const planSetMarkerPrefix = "<!-- statecraft-plan-set:"
+
+func planSetIDFromBody(body string) string {
+	start := strings.Index(body, planSetMarkerPrefix)
+	if start < 0 {
+		return ""
+	}
+	start += len(planSetMarkerPrefix)
+	end := strings.Index(body[start:], "-->")
+	if end < 0 {
+		return ""
+	}
+	return strings.TrimSpace(body[start : start+end])
 }

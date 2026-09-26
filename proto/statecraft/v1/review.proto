@@ -55,4 +55,7 @@ message ReviewDecision {
   string decision = 2;
   string plan_set_id = 3;
   string created_at = 4;
+  string commit_sha = 5;
+  string external_id = 6;
+  string source = 7;
 }

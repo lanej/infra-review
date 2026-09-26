@@ -1,195 +1,158 @@
 # Integration boundaries
 
-Statecraft treats GitHub and Atlantis as adapters around its own change-review domain.
+Statecraft owns infrastructure reviews, roots, immutable plan sets, findings, and
+human approval. Source control supplies code/reviewer evidence; the execution
+system supplies command results. Provider SDKs and wire DTOs stay in
+`internal/adapters`; `internal/domain`, `internal/ports`, services, protobuf, and
+TypeScript contracts use Statecraft types.
 
-This document records the external shapes we currently depend on and, equally
-important, the data those systems do **not** provide through stable APIs.
+Research checked 2026-09-25 against GitHub's REST documentation, go-github v92.0.0,
+and Atlantis v0.48.0. The adapters are implemented and tested with local HTTP
+servers. The executable still composes the mock `ReviewStore`: no production
+credentials, GitHub writes, or Atlantis plan/apply calls are enabled by this PR.
 
-## GitHub
+## Client choices and compatibility
 
-GitHub provides source-change identity, code history, reviewers, human review
-decisions, and commit-level status surfaces.
+| System | Choice | Rationale |
+| --- | --- | --- |
+| GitHub | `github.com/google/go-github/v92` v92.0.0 | GitHub lists this maintained Go client under third-party libraries. GitHub has no official Go REST SDK in its library catalog. Use the typed, paginated client rather than maintaining another REST implementation. It is not an official Google product either. |
+| Atlantis | A narrow `net/http` client with adapter-local DTOs | The upstream documentation and release expose no official standalone Go client. Importing Atlantis's server/controller/model packages would couple Statecraft to its server implementation. The small documented HTTP surface is the better-supported integration contract, though it remains alpha. |
 
-### Client
+GitHub's [library catalog](https://docs.github.com/en/rest/using-the-rest-api/libraries-for-the-rest-api)
+and [go-github release](https://github.com/google/go-github/releases/tag/v92.0.0)
+are the client references. v92 requires Go 1.26; this repository raises its minimum
+accordingly. The SDK currently defaults to REST API `2022-11-28` and selects
+`2026-03-10` for migrated methods; leave version negotiation with the pinned SDK,
+rather than forcing the newest documentation version over older response models.
+See its [versioned source](https://github.com/google/go-github/blob/v92.0.0/github/github.go)
+and [module requirements](https://github.com/google/go-github/blob/v92.0.0/go.mod).
 
-The Go adapter uses `github.com/google/go-github/v72`.
+Atlantis's [API documentation](https://www.runatlantis.io/docs/api-endpoints)
+explicitly labels the endpoints alpha. Upgrade Atlantis only after checking the
+release's request/response shapes against these adapter contract tests. v0.48.0
+is the inspected server baseline, not a guarantee of compatibility with every
+Atlantis deployment. Drift APIs have a different envelope and are outside these
+ports; neither drift remediation nor lock mutation is exposed here.
 
-This is a mature community client rather than an official GitHub SDK. The GitHub
-REST API remains the contract of record. Version 72 is intentionally pinned because
-it supports the repository's Go 1.23 toolchain.
+## GitHub: source-change and review evidence
 
-### Port mapping
+`SourceControl` is an outbound port. Its implementation accepts a configured
+`*github.Client`; authentication, GitHub Enterprise URLs, HTTP timeouts, and token
+refresh belong at application composition, outside the domain.
 
-| Statecraft | GitHub |
+| Port operation | REST operation | Internal mapping |
+| --- | --- | --- |
+| `GetChange` | `GET /repos/{owner}/{repo}/pulls/{number}` | PR number, title/body, author, draft, head SHA/ref, base ref, and URL become `SourceChange`. A merged PR is `merged`, rather than merely `closed`. |
+| `ListChangedFiles` | `GET .../pulls/{number}/files` | Filename/previous filename, change status, additions/deletions/count become `ChangedFile`. These are source files, not infrastructure `Change` objects. |
+| `ListReviewDecisions` | `GET .../pulls/{number}/reviews` | Submitted reviews become `ExternalReviewDecision`: external ID, actor, decision, commit, timestamp, body, URL, and provenance. Pending drafts are omitted; dismissed decisions and old commit SHAs remain visible evidence. |
+| `PublishDecision` | `POST .../pulls/{number}/reviews` | An explicit commit and supported human decision map to `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`. |
+| `PublishStatus` | `POST /repos/{owner}/{repo}/check-runs` | A `StatusReport` becomes a check name, head SHA, status/conclusion, summary, and details URL. This creates a check run, not a legacy commit status or a human approval. |
+
+List operations follow GitHub's pagination links with a page size of 100. The files
+endpoint caps results at 3,000; the adapter checks PR file totals when it hits that
+limit and errors when completeness cannot be established. It does not silently
+turn a truncated list into a complete review. API and transport errors propagate
+with operation context; write operations are not retried automatically.
+
+Sources: [pull requests and files](https://docs.github.com/en/rest/pulls/pulls),
+[reviews](https://docs.github.com/en/rest/pulls/reviews),
+[checks](https://docs.github.com/en/rest/checks/runs), and
+[pagination](https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api).
+
+### Identity and approval ownership
+
+Use an installation token for repository reads and Statecraft checks, with the
+required repository permissions (`Pull requests: read`, or `Checks: write` for
+publishing). Publishing a human review requires the signed-in reviewer's GitHub App
+user access token and `Pull requests: write`. A bot's review cannot stand in for
+that person's approval. Credential acquisition/refresh and authorization are still
+future composition work. See [GitHub App user authentication](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-with-a-github-app-on-behalf-of-a-user).
+
+GitHub reviews bind to commits; Statecraft approvals bind to exact plan sets. A
+GitHub review does not prove which Terraform/OpenTofu plan the reviewer saw.
+Outbound reviews can include an HTML `statecraft-plan-set` marker for audit
+correlation, but review bodies are editable, untrusted text. The adapter does not
+recover an authoritative `PlanSetID` from that marker.
+
+`SourceReviews.Load` assembles a provider-neutral snapshot. `MergeSourceSnapshot`
+updates source metadata and `Review.SourceDecisions` while preserving Statecraft's
+`Review.Decisions`, infrastructure roots, changes, and findings. Source history
+never becomes a Statecraft approval or refreshes a stale approval. Only an
+authenticated, persisted Statecraft decision can establish that binding. Source
+history stays internal until it has a distinct public API/UI; it is omitted from
+the temporary JSON review response and is not added to protobuf's approval list.
+
+## Atlantis: execution commands and notifications
+
+The same adapter implements the `Planner` and `Executor` ports. It authenticates
+with `X-Atlantis-Token`; the server must configure `api-secret` to enable command
+endpoints. The adapter owns HTTP DTOs, not Atlantis Go server types.
+
+| Statecraft input/output | Atlantis wire shape |
 | --- | --- |
-| `SourceControl.GetChange` | Get pull request |
-| `SourceControl.ListChangedFiles` | List pull request files |
-| `SourceControl.ListReviewDecisions` | List pull request reviews |
-| `SourceControl.PublishDecision` | Create pull request review |
-| `SourceControl.PublishStatus` | Create check run |
+| Repository, ref, base branch, source-change number | `Repository` (`owner/repo`), `Ref`, `base_branch`, `PR`; this adapter fixes `Type` to `Github`. |
+| Named `RootSelector` | `PlannerRef` maps to a `Projects` entry. |
+| Directory/workspace `RootSelector` | A `Paths` entry selects the repository-relative directory and workspace. The default workspace is `default`. |
+| `PlanRun` / `ApplyRun` | Legacy top-level `Error`, `Failure`, `ProjectResults`, and plan-discard information; not the newer drift envelope. |
+| Per-root plan result | `PlanSuccess.TerraformOutput` becomes textual output; `Error`/`Failure` determine failed status. |
+| Per-root apply result | `ApplySuccess` becomes textual output; errors and failures remain structured attempt evidence. |
+| Policy result during planning | A distinct `PlanAttempt.Phase` avoids mistaking a policy-check result for another generated plan. |
 
-GitHub-specific objects are translated inside
-`internal/adapters/github`. Application and domain packages do not import the
-GitHub client.
+The adapter requires explicit targets and rejects ambiguous or duplicate selectors.
+Mixed named-project and directory/workspace selection is intentionally rejected to
+avoid duplicate execution and version-dependent selection behavior. A caller can
+normalize its configuration to named projects or exact directory/workspace pairs.
+`RootFromProject` maps an already-decoded configuration project into a root; it does
+not fetch repositories or parse `atlantis.yaml`. Root identity is scoped to the
+repository, and Statecraft-supplied root IDs survive the response mapping.
 
-### Human identity
+Atlantis's command result can contain both successful and failed projects. A
+non-null `Error` (including `{}`, the serialized Go error shape) is failure
+evidence even when no message survives JSON serialization. HTTP 500 with a valid
+project-failure result retains those attempts. Aggregate failure and discarded
+plans also remain visible; a caller must inspect run metadata and attempts rather
+than treating a nil transport error as execution success. Missing results and
+unknown status do not prove completeness. When several named projects share a
+directory/workspace pair, select by project name to preserve their distinct roots.
+Setup/auth errors and invalid response
+shapes are errors, not successful empty runs.
 
-Statecraft approval should remain attributable to the human who made the decision.
+A succeeded policy phase means Atlantis cleared its policy gate, including any
+approved exception. It is not Statecraft approval; testing only a nested `Passed`
+boolean would misclassify approved exceptions. See the
+[policy runner](https://github.com/runatlantis/atlantis/blob/v0.48.0/server/events/project_command_runner.go).
 
-A GitHub App installation token is appropriate for repository reads and Statecraft
-check runs. When Statecraft submits a human `APPROVE`, `REQUEST_CHANGES`, or
-`COMMENT` review on behalf of the signed-in reviewer, the adapter should be
-constructed with that reviewer's GitHub App user access token.
+The precise controller behavior and models come from the inspected
+[v0.48.0 API controller](https://github.com/runatlantis/atlantis/blob/v0.48.0/server/controllers/api_controller.go)
+and [command models](https://github.com/runatlantis/atlantis/blob/v0.48.0/server/events/command/result.go).
+Root configuration is described in [repo-level configuration](https://www.runatlantis.io/docs/repo-level-atlantis-yaml).
 
-The port deliberately accepts an authenticated adapter rather than token concepts.
-Credential selection and token refresh belong in the GitHub adapter/application
-composition layer, not in the review domain.
+### Apply is not approval enforcement
 
-### Plan-set binding
+The API apply operation runs a fresh plan phase before applying. It does not accept
+a Statecraft plan digest or promise to apply the artifact that a human approved.
+Therefore `Executor.Apply` is only a command capability: the mock runtime does not
+expose it, and production approval/apply must wait for artifact identity,
+authorization, and plan-set reconciliation. Do not retry an uncertain apply
+response automatically; the infrastructure operation may already have run.
 
-GitHub binds a review to a commit SHA, while Statecraft approvals bind to a
-`PlanSet`, which is more specific.
+`DecodeApplyWebhook` maps repository, PR/head/base, actor, directory/workspace,
+project identity, and success to `ApplyNotification`. Decoding is not sender
+authentication or replay protection, and no public webhook endpoint is installed.
+A future receiver must authenticate the request before decoding/persisting it. The
+legacy HTTP notification uses a configured custom header, not GitHub's inbound
+webhook signature scheme. See [Atlantis apply notifications](https://www.runatlantis.io/docs/sending-notifications-via-webhooks).
 
-Until Statecraft owns a durable synchronization record, the GitHub adapter writes a
-non-rendered marker into the review body:
+## Evidence that Statecraft still needs
 
-```html
-<!-- statecraft-plan-set:planset-7 -->
-```
+Textual plan/apply output is not structured resource changes, immutable plan
+identity, or a durable history. Neither adapter invents findings, graph edges,
+plan-set digests, execution timestamps, or approvals from those fields.
 
-Statecraft must still persist the decision itself. The marker is synchronization
-metadata and an audit aid, not the authoritative database.
-
-## Atlantis
-
-Atlantis provides Terraform/OpenTofu planning and application execution.
-
-### API stability
-
-Atlantis documents `POST /api/plan` and `POST /api/apply` as alpha APIs. Statecraft
-therefore owns a narrow HTTP adapter instead of importing Atlantis server packages.
-
-The adapter's wire DTOs mirror only fields Statecraft currently needs.
-
-### Command shape
-
-Statecraft maps:
-
-```text
-PlanRequest / ApplyRequest
-  repository
-  ref
-  base branch
-  pull request
-  roots[]
-      project name OR directory/workspace
-
-        |
-        v
-
-Atlantis APIRequest
-  Repository
-  Ref
-  base_branch
-  Type = Github
-  PR
-  Projects[] / Paths[]
-```
-
-A Statecraft `RootSelector` maps to an Atlantis project name when one exists.
-Otherwise the stable identity is the repo-relative directory and Terraform
-workspace.
-
-Atlantis project identity is therefore an adapter input, not Statecraft's definition
-of a root.
-
-### Result shape
-
-Legacy plan/apply responses contain per-project results:
-
-```text
-ProjectResult
-  ProjectName
-  RepoRelDir
-  Workspace
-  Error
-  Failure
-  PlanSuccess.TerraformOutput OR ApplySuccess
-```
-
-These become Statecraft `PlanAttempt` and `ApplyAttempt` values.
-
-Atlantis currently returns HTTP 500 when a command result contains project errors,
-while still returning useful `ProjectResults`. The adapter preserves those results
-as failed attempts instead of treating them as a transport failure.
-
-### Apply behavior
-
-Atlantis's API apply endpoint performs a plan phase before applying. Statecraft
-should therefore not infer that an `Apply` request is a pure application of an
-already-captured immutable plan. The eventual execution model must reconcile the
-plan actually used by Atlantis with the `PlanSet` approved in Statecraft.
-
-That is a critical integration invariant before production approval/apply is enabled.
-
-### Apply webhooks
-
-Atlantis HTTP apply webhooks provide repository, pull request, actor, project,
-directory/workspace, head/base identity, and success. The webhook adapter maps that
-payload to `domain.ApplyNotification`.
-
-This is useful lifecycle evidence, but it is not a replacement for persisted apply
-attempts and logs.
-
-## What Atlantis does not give Statecraft
-
-The documented plan/apply command API is not a complete review read model.
-
-Statecraft still needs durable access to:
-
-- structured plan JSON;
-- exact plan/artifact identity and digest;
-- historical plan attempts;
-- full execution logs;
-- policy evidence;
-- plan/apply timestamps and lifecycle events;
-- evidence needed to reconstruct a review after Atlantis workspaces are cleaned up.
-
-Atlantis custom workflows expose plan-related files, including `$PLANFILE` and
-`$SHOWFILE`, and can produce JSON plan output. The likely production integration is
-therefore an explicit evidence-ingestion path from the Atlantis workflow into
-Statecraft rather than scraping Atlantis's web UI.
-
-The exact ingestion protocol is a subsequent steel thread.
-
-## Boundary summary
-
-```text
-                 Statecraft domain
-              /                    \
-     SourceControl                 Planner / Executor
-          |                              |
-       GitHub                          Atlantis
-          |                              |
- PRs / reviews / checks       plan/apply command API
-                                        |
-                              workflow evidence + webhooks
-                                        |
-                                        v
-                             Statecraft evidence store
-```
-
-GitHub answers who/what code is changing and carries human review decisions.
-Atlantis executes infrastructure workflows.
-Statecraft owns the durable infrastructure-specific review model joining those
-facts together.
-
-
-## References
-
-- Atlantis API endpoints: https://www.runatlantis.io/docs/api-endpoints
-- Atlantis custom workflows and plan/show files: https://www.runatlantis.io/docs/custom-workflows
-- Atlantis apply HTTP webhooks: https://www.runatlantis.io/docs/sending-notifications-via-webhooks
-- GitHub pull request review API: https://docs.github.com/en/rest/pulls/reviews
-- GitHub Checks API: https://docs.github.com/en/rest/checks
-- GitHub App authentication on behalf of a user: https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-with-a-github-app-on-behalf-of-a-user
+The documented Atlantis command API has no historical plan-JSON retrieval
+operation. Production needs an explicit workflow-to-Statecraft evidence ingestion
+path: capture structured plan JSON, exact binary-plan/artifact digests, commit and
+root identity, logs, and lifecycle timestamps before workspaces disappear. Atlantis
+[custom workflows](https://www.runatlantis.io/docs/custom-workflows) expose
+`$PLANFILE`/`$SHOWFILE` for this integration. Define and persist that ingestion
+contract in a subsequent thread instead of scraping comments or the Atlantis UI.

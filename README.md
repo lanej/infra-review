@@ -150,13 +150,17 @@ The prototype exists to validate the review interaction model. The implementatio
 The current steel thread separates the TypeScript frontend from a Go backend and
 uses a mock adapter behind the domain port.
 
+The Go module is `github.com/lanej/statecraft` and the frontend package is
+`statecraft`. Use Go 1.26 or later (required by the pinned GitHub client) and
+Node.js 22 or later for development.
+
 ```sh
 # terminal 1
 make api
 
 # terminal 2
 cd web
-npm install
+npm ci
 npm run dev
 ```
 

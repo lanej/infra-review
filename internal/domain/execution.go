@@ -27,10 +27,16 @@ type PlanRequest struct {
 
 type PlanRun struct {
 	Attempts []PlanAttempt
+	// Command-level failure can coexist with successful per-root attempts.
+	Failure        string
+	ErrorPresent   bool
+	PlansDiscarded bool
 }
 
 type PlanAttempt struct {
-	RootID       string
+	RootID string
+	// A planner can report a policy check separately from plan generation.
+	Phase        string
 	PlannerRef   string
 	Directory    string
 	Workspace    string
@@ -49,7 +55,9 @@ type ApplyRequest struct {
 }
 
 type ApplyRun struct {
-	Attempts []ApplyAttempt
+	Attempts     []ApplyAttempt
+	Failure      string
+	ErrorPresent bool
 }
 
 type ApplyAttempt struct {

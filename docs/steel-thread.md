@@ -54,7 +54,10 @@ The external-boundary thread is complete when:
 4. Atlantis plan/apply requests map from domain root selectors;
 5. Atlantis per-project results map to structured plan/apply attempts even when
    Atlantis returns HTTP 500 for project errors;
-6. Atlantis apply webhook payloads map to provider-neutral lifecycle events.
+6. Atlantis apply webhook payloads map to provider-neutral lifecycle events;
+7. aggregate failures, policy checks, and discarded plans survive normalization;
+8. imported source reviews cannot replace Statecraft approvals or establish a
+   plan-set binding from editable text.
 
 The adapters are deliberately **not** wired into production execution in this PR.
 Plan evidence ingestion, historical logs, plan-set persistence, GitHub App auth,

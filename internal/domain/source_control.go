@@ -29,12 +29,12 @@ type SourceChange struct {
 }
 
 type ChangedFile struct {
-	Path          string
-	PreviousPath  string
-	Status        string
-	Additions     int
-	Deletions     int
-	Changes       int
+	Path         string
+	PreviousPath string
+	Status       string
+	Additions    int
+	Deletions    int
+	Changes      int
 }
 
 type PublishDecisionRequest struct {
@@ -61,6 +61,8 @@ type ExternalReviewDecision struct {
 	Actor     string
 	Decision  string
 	CommitSHA string
+	// PlanSetID is correlation metadata only; source reviews cannot authorize a
+	// Statecraft PlanSet without a separately persisted, authenticated decision.
 	PlanSetID string
 	Body      string
 	URL       string

@@ -1,5 +1,5 @@
 {
-  "name":"statecraft-web",
+  "name":"statecraft",
   "private":true,
   "type":"module",
   "scripts":{"dev":"vite","build":"tsc -b && vite build"},

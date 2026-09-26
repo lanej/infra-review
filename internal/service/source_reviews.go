@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/lanej/statecraft/internal/domain"
 	"github.com/lanej/statecraft/internal/ports"
@@ -31,14 +32,15 @@ func (s *SourceReviews) Load(ctx context.Context, repo domain.RepositoryRef, num
 	}
 	return domain.SourceReviewSnapshot{
 		Change:    change,
-		Files:     files,
-		Decisions: decisions,
+		Files:     slices.Clone(files),
+		Decisions: slices.Clone(decisions),
 	}, nil
 }
 
 // MergeSourceSnapshot hydrates the source-control-owned portion of a Review.
-// Infrastructure roots, plan changes, findings, execution history, and graph data
-// remain owned by Statecraft's plan/evidence side and are preserved.
+// Infrastructure evidence and Statecraft's authoritative decisions are preserved.
+// External review history is recorded separately: a source review or a plan-set
+// marker in its editable body cannot authorize an infrastructure plan.
 func MergeSourceSnapshot(review domain.Review, snapshot domain.SourceReviewSnapshot) domain.Review {
 	change := snapshot.Change
 	review.Repository = change.Repository.FullName()
@@ -46,17 +48,6 @@ func MergeSourceSnapshot(review domain.Review, snapshot domain.SourceReviewSnaps
 	review.Title = change.Title
 	review.HeadSHA = change.HeadSHA
 
-	review.Decisions = make([]domain.ReviewDecision, 0, len(snapshot.Decisions))
-	for _, decision := range snapshot.Decisions {
-		review.Decisions = append(review.Decisions, domain.ReviewDecision{
-			Actor:      decision.Actor,
-			Decision:   decision.Decision,
-			PlanSetID:  decision.PlanSetID,
-			CommitSHA:  decision.CommitSHA,
-			CreatedAt:  decision.CreatedAt.UTC().Format("2006-01-02T15:04:05Z"),
-			ExternalID: decision.ID,
-			Source:     decision.Source,
-		})
-	}
+	review.SourceDecisions = slices.Clone(snapshot.Decisions)
 	return review
 }

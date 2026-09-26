@@ -2,7 +2,7 @@ package atlantis
 
 import "github.com/lanej/statecraft/internal/domain"
 
-// Project mirrors only the stable repo-level Atlantis project fields that
+// Project mirrors only the documented repo-level Atlantis project fields that
 // Statecraft needs for root identity. It is intentionally not the Atlantis
 // server's internal Go type.
 type Project struct {

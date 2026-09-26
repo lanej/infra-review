@@ -155,6 +155,13 @@ state, affected objects, explanation, status, and evidence.
 A human decision bound to an exact PlanSet and commit, with reviewer identity,
 timestamp, optional message, and external synchronization metadata.
 
+Source-control reviews are separate `ExternalReviewDecision` history in
+`Review.SourceDecisions`. Refreshing that history preserves Statecraft's own
+decisions. A source review's commit or editable body cannot establish an
+authoritative PlanSet approval; an authenticated persisted decision is required.
+The temporary JSON bridge exposes only Statecraft decisions, matching the current
+protobuf/frontend approval contract.
+
 ### Discussion
 
 A thread attached to a Review, Resource, Change, Relationship, Finding, or execution

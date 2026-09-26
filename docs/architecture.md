@@ -1,114 +1,121 @@
 # Architecture
 
-This document establishes the initial boundaries for implementing the product defined in [product.md](./product.md).
+This document establishes the implementation boundaries for the product defined in
+[product.md](./product.md).
 
 ## Architectural style
 
-Use a hexagonal (ports-and-adapters) architecture.
+Statecraft uses a hexagonal (ports-and-adapters) architecture.
 
-The domain must understand concepts such as repositories, reviews, roots, plans, execution attempts, approvals, logs, and source changes, but it must not encode GitHub or Atlantis objects as those concepts.
+The domain understands repositories, reviews, roots, plan sets, execution attempts,
+approvals, findings, resources, relationships, evidence, and source changes. It does
+not model GitHub pull requests or Atlantis command structs directly.
 
 GitHub and Atlantis are required initial integrations, not architectural boundaries.
 
-Core application logic should depend on ports such as:
+### Current outbound ports
 
 ```text
 SourceControl
   GetChange
-  GetCommit
-  GetDiff
-  GetReviewers
+  ListChangedFiles
+  ListReviewDecisions
   PublishDecision
   PublishStatus
 
 Planner
-  DiscoverRoots
-  GetPlanAttempts
-  GetPlanArtifact
-  GetExecutionLogs
+  Plan
 
 Executor
   Apply
-  GetApplyAttempts
-  GetExecutionLogs
 
-PolicyEvaluator
-  GetFindings
-
-IdentityProvider
-  ResolveActor
-  Authorize
+ReviewStore
+  GetReview
 ```
 
-Initial adapters implement these ports using GitHub and Atlantis. Provider-specific identifiers and raw payloads may be retained as evidence and integration metadata, but they should not leak into core domain behavior or frontend contracts.
+Ports will expand only when a domain use case requires them. In particular,
+historical plan/log retrieval should be backed by Statecraft's evidence store rather
+than pretending Atlantis exposes a stable historical read API.
 
-This boundary should make it possible to replace or add source-control, planning, execution, policy, and identity integrations without redesigning the review model.
+Provider-specific identifiers and raw payloads may be retained as evidence and
+integration metadata, but they must not leak into frontend contracts or core domain
+behavior.
+
+See [integrations.md](./integrations.md) for the concrete GitHub and Atlantis mapping.
 
 ## System boundaries
 
 ```text
-GitHub                           Atlantis
-  |                                |
-  | PRs, commits, identity         | plans, applies, logs
-  | reviews, checks                |
-  +---------------+----------------+
-                  |
-                  v
-        +-------------------+
-        | Statecraft API  |
-        | Go + Connect      |
-        +---------+---------+
-                  |
-          normalized domain
-                  |
-                  v
-        +-------------------+
-        | Review frontend   |
-        | TypeScript        |
-        +-------------------+
+GitHub                                  Atlantis
+  |                                        |
+  | PRs, commits, reviews, checks          | plan/apply commands
+  |                                        | workflow evidence/webhooks
+  +------------------+---------------------+
+                     |
+                     v
+           +-------------------+
+           | Statecraft API    |
+           | Go + Connect      |
+           +---------+---------+
+                     |
+              normalized domain
+                     |
+              durable evidence
+                     |
+                     v
+           +-------------------+
+           | TypeScript UI     |
+           +-------------------+
 ```
 
-The frontend does not consume raw OpenTofu/Terraform or Atlantis representations as its application model. The backend normalizes external inputs into review-domain objects.
+The frontend never consumes GitHub, Atlantis, or raw OpenTofu/Terraform
+representations as its application model.
 
 ## Initial domain model
 
 ### Repository
 
-A GitHub repository installed/configured for Statecraft.
+A source repository installed/configured for Statecraft.
 
 ### Review
 
-An infrastructure review corresponding to a GitHub pull request and current head commit.
+An infrastructure review corresponding to a source change, initially a GitHub pull
+request.
 
-Owns:
+A Review owns or references:
 
-- repository and pull-request identity;
+- repository and source-change identity;
 - head commit;
 - expected roots;
 - current plan set;
 - review completeness;
 - reviewers and decisions;
 - findings;
-- graph;
-- execution history;\n- verification state;\n- revert lineage.
+- resource graph;
+- execution history;
+- verification state;
+- revert lineage.
 
 ### Root
 
 An independently plannable/applicable infrastructure unit.
 
-A root is a product concept. Atlantis projects may map onto roots, but the frontend should not depend on Atlantis terminology.
+Atlantis projects may map onto roots, but a root is a Statecraft concept. A named
+Atlantis project or directory/workspace tuple is external identity used by the
+Atlantis adapter.
 
 ### PlanSet
 
-The complete collection of root plans constituting one reviewable infrastructure proposal.
+The complete collection of root plans constituting one reviewable infrastructure
+proposal.
 
-Its identity must be deterministic and immutable, for example from:
+Its identity must be deterministic and immutable from at least:
 
 - repository;
-- pull request;
+- source-change identity;
 - commit SHA;
 - ordered root identities;
-- root plan digests.
+- exact root plan digests.
 
 Human approvals bind to a PlanSet.
 
@@ -116,92 +123,72 @@ Human approvals bind to a PlanSet.
 
 One attempt to produce a plan for a root.
 
-Includes status, timestamps, artifact identity, logs, errors, and normalized changes.
+Includes status, timestamps, artifact identity, logs/errors, and normalized changes.
 
 ### ApplyAttempt
 
 One attempt to apply an approved root/plan set.
 
-Includes status, timestamps, logs, errors, and any known partial-execution information.
+Includes status, timestamps, logs/errors, and known partial-execution information.
 
-### Resource
+### Resource and Change
 
-A normalized infrastructure object. Provider-specific data may be retained as evidence but should not define the frontend API.
-
-### Change
-
-A semantic difference for a Resource within a PlanSet.
-
-At minimum:
-
-- create;
-- modify;
-- replace;
-- delete.
-
-Changes contain property-level before/after evidence.
+A Resource is a normalized infrastructure object. A Change is a semantic difference
+for that resource within a PlanSet: create, modify, replace, or delete, with
+property-level before/after evidence.
 
 ### Relationship
 
-A directed edge between resources.
+A directed edge between resources with a relationship kind, evidence, and
+confidence/provenance.
 
-Relationships include:
-
-- source;
-- target;
-- kind;
-- evidence;
-- confidence/provenance.
-
-Examples include REFERENCES, DEPENDS_ON, ROUTES_TO, READS_FROM, WRITES_TO, AUTHORIZED_BY, and RUNS_ON.
+Examples include REFERENCES, DEPENDS_ON, ROUTES_TO, READS_FROM, WRITES_TO,
+AUTHORIZED_BY, and RUNS_ON.
 
 ### Finding
 
-A review concern derived from policy or analysis.
-
-Includes category, severity, blocking state, affected objects, explanation, status, and evidence.
+A review concern derived from policy or analysis, including severity, blocking
+state, affected objects, explanation, status, and evidence.
 
 ### ReviewDecision
 
-A human decision bound to a PlanSet.
-
-Includes reviewer identity, decision, timestamp, optional message, and synchronization state with GitHub.
+A human decision bound to an exact PlanSet and commit, with reviewer identity,
+timestamp, optional message, and external synchronization metadata.
 
 ### Discussion
 
-A thread attached to a Review, Resource, Change, Relationship, Finding, or execution event.
+A thread attached to a Review, Resource, Change, Relationship, Finding, or execution
+event.
 
-### ExecutionEvent
+### Evidence
 
-Structured information extracted from Atlantis execution and logs. Raw logs remain authoritative evidence.
+Raw external artifacts are durable evidence, separate from normalized projections.
+Normalization can evolve without destroying the source material used to derive a
+decision.
 
 ## Frontend
 
 Target: TypeScript.
 
-The frontend owns interaction state and presentation:
+The frontend owns interaction and presentation for:
 
-- review dashboard;
+- review overview;
 - hierarchical change browser;
 - directed graph browser;
 - resource inspector;
 - finding investigation;
 - approval/request-changes interactions;
 - execution/log exploration;
-- plan history and comparison;\n- verification state;\n- revert preparation and lineage.
+- plan history and comparison;
+- verification state;
+- revert preparation and lineage.
 
-The graph must be designed for hundreds or thousands of resources. It should not assume that rendering the entire graph is useful.
+The graph must support hundreds or thousands of resources without assuming that
+rendering the complete graph is useful.
 
-Server-supported graph operations should include:
-
-- changed-only graph;
-- neighborhood by depth;
-- upstream traversal;
-- downstream traversal;
-- path between resources;
-- grouping/collapse by root and module;
-- filtering by change/risk/finding;
-- cross-root relationships.
+Server-supported graph operations should eventually include changed-only views,
+bounded neighborhoods, upstream/downstream traversal, path finding, grouping by
+root/module, filtering by change/risk/finding, and cross-root relationships.
 
 ## Backend
 
@@ -209,22 +196,24 @@ Target: Go with Connect.
 
 The backend owns:
 
-- GitHub integration and webhook ingestion;
-- Atlantis plan/apply/log ingestion;
+- source-control integration and webhook ingestion;
+- planning/execution adapters;
+- plan/apply evidence ingestion;
 - root discovery and lifecycle;
 - OpenTofu/Terraform normalization;
 - plan-set identity and history;
 - resource graph construction/query;
 - findings and policy results;
 - review/approval state;
+- durable execution evidence;
 - audit history;
-- API authorization;\n- durable evidence/history suitable for future assisted diagnostics and remediation.
-
-The backend should preserve raw artifacts separately from normalized projections so normalization can evolve without losing evidence.
+- authorization;
+- durable history suitable for future assisted diagnostics/remediation.
 
 ## API shape
 
-Initial services should follow domain boundaries rather than external systems.
+Initial public services should follow Statecraft domain boundaries rather than
+external systems:
 
 ```text
 ReviewService
@@ -260,14 +249,14 @@ DiscussionService
   ResolveThread
 ```
 
-This is directional, not yet a protobuf contract.
+This is directional, not yet the final protobuf contract.
 
 ## Integration principle
 
-GitHub and Atlantis are adapters around the domain model, not the domain model itself. Integration code should live at the hexagonal boundary behind explicit ports rather than being called directly from domain services.
+GitHub and Atlantis are adapters around the domain model, not the domain model
+itself.
 
-That keeps the product capable of evolving independently while preserving the current operating contract:
-
-- GitHub owns code and repository identity.
-- Atlantis executes plans and applies.
-- Statecraft owns infrastructure-specific human review, diagnosis, and approval.
+- GitHub owns source changes and repository identity.
+- Atlantis executes plan/apply workflows.
+- Statecraft owns the durable infrastructure-specific review, diagnosis, evidence,
+  and human approval model.

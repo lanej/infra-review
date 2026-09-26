@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package statecraft.v1;
+
+option go_package = "github.com/lanej/infra-review/gen/statecraft/v1;statecraftv1";
+
+service ReviewService {
+  rpc GetReview(GetReviewRequest) returns (GetReviewResponse);
+}
+
+message GetReviewRequest { string review_id = 1; }
+
+message GetReviewResponse { Review review = 1; }
+
+message Review {
+  string id = 1;
+  string repository = 2;
+  int64 pull_request = 3;
+  string title = 4;
+  string head_sha = 5;
+  string state = 6;
+  repeated Root roots = 7;
+  repeated Change changes = 8;
+  repeated Finding findings = 9;
+  repeated ReviewDecision decisions = 10;
+}
+
+message Root {
+  string id = 1;
+  string name = 2;
+  string status = 3;
+}
+
+message Change {
+  string id = 1;
+  string root_id = 2;
+  string address = 3;
+  string resource_type = 4;
+  string action = 5;
+  string risk = 6;
+  string summary = 7;
+}
+
+message Finding {
+  string id = 1;
+  string severity = 2;
+  string category = 3;
+  string title = 4;
+  string resource_address = 5;
+  bool blocking = 6;
+}
+
+message ReviewDecision {
+  string actor = 1;
+  string decision = 2;
+  string plan_set_id = 3;
+  string created_at = 4;
+}

@@ -183,3 +183,13 @@ GitHub answers who/what code is changing and carries human review decisions.
 Atlantis executes infrastructure workflows.
 Statecraft owns the durable infrastructure-specific review model joining those
 facts together.
+
+
+## References
+
+- Atlantis API endpoints: https://www.runatlantis.io/docs/api-endpoints
+- Atlantis custom workflows and plan/show files: https://www.runatlantis.io/docs/custom-workflows
+- Atlantis apply HTTP webhooks: https://www.runatlantis.io/docs/sending-notifications-via-webhooks
+- GitHub pull request review API: https://docs.github.com/en/rest/pulls/reviews
+- GitHub Checks API: https://docs.github.com/en/rest/checks
+- GitHub App authentication on behalf of a user: https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-with-a-github-app-on-behalf-of-a-user

@@ -27,5 +27,6 @@ type Finding struct {
 }
 
 type ReviewDecision struct {
-	Actor, Decision, PlanSetID, CreatedAt string
+	Actor, Decision, PlanSetID, CommitSHA, CreatedAt string
+	ExternalID, Source string
 }

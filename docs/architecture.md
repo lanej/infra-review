@@ -16,6 +16,43 @@ evidence, and source changes. GitHub, Atlantis, and OPA types stay in adapters.
 GitHub and Atlantis are required initial integrations. OPA/Rego is the intended
 initial policy integration. These implementations do not define the domain model.
 
+### Hexagonal architecture invariants
+
+These are implementation requirements, not guidelines:
+
+1. **Dependencies point inward.** Domain packages must not import adapters,
+   provider SDKs, transport packages, generated API clients, or provider wire
+   models.
+2. **External types terminate at adapters.** GitHub, Atlantis, OPA, Terraform/
+   OpenTofu, storage-driver, and similar SDK/wire types must be translated at the
+   adapter boundary before they participate in domain behavior.
+3. **Ports describe Statecraft capabilities.** A port exists because a Statecraft
+   use case needs a capability; it must not mirror an external API merely because
+   that API exposes an endpoint.
+4. **Application services orchestrate; adapters translate.** Workflow policy,
+   authorization semantics, proposal identity, approval validity, and lifecycle
+   decisions belong in domain/application code. Adapters own protocol mechanics,
+   authentication plumbing, provider compatibility, and mapping.
+5. **Provider-native data is evidence, not the application model.** Raw payloads,
+   logs, plans, and provider identifiers may be retained with provenance when
+   useful, but normalized Statecraft concepts drive workflow and public contracts.
+   Raw evidence may be exposed deliberately as evidence without becoming the
+   frontend or domain model.
+6. **Public APIs follow the domain.** Connect/protobuf and frontend contracts must
+   be expressed in Statecraft vocabulary. Provider-specific fields may appear only
+   as explicitly typed provenance/evidence metadata where the use case requires
+   them.
+7. **New integrations preserve the boundary.** Adding an external system means
+   implementing or extending a domain port and an adapter; it must not introduce
+   a provider-specific control path through the UI or application service.
+8. **Simulation and production stay compositionally distinct.** Mock adapters may
+   implement equivalent domain capabilities for tests and demos, but production
+   services must not silently fall back to synthetic execution or evidence.
+
+Violating an invariant requires an explicit architecture decision recorded here
+with the reason, scope, and intended removal or replacement. Convenience alone is
+not sufficient.
+
 ### Current outbound ports
 
 ```text

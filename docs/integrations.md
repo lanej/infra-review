@@ -82,6 +82,13 @@ authenticated, persisted Statecraft decision can establish that binding. Source
 history stays internal until it has a distinct public API/UI; it is omitted from
 the temporary JSON review response and is not added to protobuf's approval list.
 
+When an existing head changes or becomes unavailable, the review and its roots
+become `stale`. Retained changes, findings, and decisions are historical evidence;
+refreshing source metadata alone cannot restore readiness. The UI shows stale
+evidence explicitly and counts only approval records bound to the displayed
+commit and a plan set, excluding stale or unbound records. Other decision kinds
+retain their own labels. This presentation count is not plan-set authorization.
+
 ## Atlantis: execution commands and notifications
 
 The same adapter implements the `Planner` and `Executor` ports. It authenticates
@@ -99,6 +106,9 @@ endpoints. The adapter owns HTTP DTOs, not Atlantis Go server types.
 | Policy result during planning | A distinct `PlanAttempt.Phase` avoids mistaking a policy-check result for another generated plan. |
 
 The adapter requires explicit targets and rejects ambiguous or duplicate selectors.
+Directory selectors containing `*`, `?`, or `[` are rejected before normalization
+or HTTP: Atlantis can expand these into multiple projects, while one Statecraft
+root must select one literal directory/workspace pair or a named project.
 Mixed named-project and directory/workspace selection is intentionally rejected to
 avoid duplicate execution and version-dependent selection behavior. A caller can
 normalize its configuration to named projects or exact directory/workspace pairs.

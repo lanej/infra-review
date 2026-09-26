@@ -162,6 +162,10 @@ authoritative PlanSet approval; an authenticated persisted decision is required.
 The temporary JSON bridge exposes only Statecraft decisions, matching the current
 protobuf/frontend approval contract.
 
+A change to an existing review's head marks the review and roots stale while
+retaining earlier evidence and decisions as history. Metadata refresh does not
+restore readiness; new planning evidence must establish that separately.
+
 ### Discussion
 
 A thread attached to a Review, Resource, Change, Relationship, Finding, or execution

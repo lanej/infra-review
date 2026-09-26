@@ -82,27 +82,27 @@ func TestSourceReviewsLoadErrorsStopAtFailedBoundary(t *testing.T) {
 
 func TestMergeSourceSnapshotPreservesStatecraftDecisionsAndEvidence(t *testing.T) {
 	review := domain.Review{
-		ID: "review-42", Repository: "old/repo", PullRequest: 1, Title: "Old title", HeadSHA: "old-head", State: "ready_for_review",
+		ID: "review-42", Repository: "acme/infra", PullRequest: 42, Title: "Old title", HeadSHA: "same-head", State: "ready_for_review",
 		Roots:           []domain.Root{{ID: "api", Name: "prod/api", Status: "planned"}},
 		Changes:         []domain.Change{{ID: "c1", RootID: "api", Address: "resource.api"}},
 		Findings:        []domain.Finding{{ID: "f1", Title: "destructive change", Blocking: true}},
-		Decisions:       []domain.ReviewDecision{{Actor: "local-reviewer", Decision: "approved", PlanSetID: "planset-7", CommitSHA: "old-head"}},
+		Decisions:       []domain.ReviewDecision{{Actor: "local-reviewer", Decision: "approved", PlanSetID: "planset-7", CommitSHA: "same-head"}},
 		SourceDecisions: []domain.ExternalReviewDecision{{ID: "old-review", Actor: "old-reviewer", Decision: "approved", Source: "github"}},
 	}
 	snapshot := domain.SourceReviewSnapshot{
 		Change: domain.SourceChange{
 			Repository: domain.RepositoryRef{Owner: "acme", Name: "infra"},
-			Number:     42, Title: "Scale API", HeadSHA: "new-head",
+			Number:     42, Title: "Scale API", HeadSHA: "same-head",
 		},
 		Decisions: []domain.ExternalReviewDecision{{
-			ID: "99", Actor: "external-reviewer", Decision: "approved", CommitSHA: "new-head", Source: "github",
+			ID: "99", Actor: "external-reviewer", Decision: "approved", CommitSHA: "same-head", Source: "github",
 			Body: "<!-- statecraft-plan-set:planset-7 -->", URL: "https://example.test/reviews/99",
 			CreatedAt: time.Date(2026, 9, 25, 20, 10, 0, 0, time.UTC),
 		}},
 	}
 
 	got := MergeSourceSnapshot(review, snapshot)
-	if got.Repository != "acme/infra" || got.PullRequest != 42 || got.Title != "Scale API" || got.HeadSHA != "new-head" {
+	if got.Repository != "acme/infra" || got.PullRequest != 42 || got.Title != "Scale API" || got.HeadSHA != "same-head" {
 		t.Fatalf("source metadata = %#v", got)
 	}
 	if got.ID != review.ID || got.State != review.State || !reflect.DeepEqual(got.Roots, review.Roots) || !reflect.DeepEqual(got.Changes, review.Changes) || !reflect.DeepEqual(got.Findings, review.Findings) {
@@ -114,7 +114,7 @@ func TestMergeSourceSnapshotPreservesStatecraftDecisionsAndEvidence(t *testing.T
 	if !reflect.DeepEqual(got.SourceDecisions, snapshot.Decisions) {
 		t.Fatalf("source review provenance = %#v, want %#v", got.SourceDecisions, snapshot.Decisions)
 	}
-	if review.Repository != "old/repo" || review.Title != "Old title" || review.HeadSHA != "old-head" || review.SourceDecisions[0].ID != "old-review" {
+	if review.Repository != "acme/infra" || review.Title != "Old title" || review.HeadSHA != "same-head" || review.SourceDecisions[0].ID != "old-review" {
 		t.Fatal("merge mutated its input review")
 	}
 
@@ -124,6 +124,54 @@ func TestMergeSourceSnapshotPreservesStatecraftDecisionsAndEvidence(t *testing.T
 	got.SourceDecisions[0].Actor = "changed"
 	if snapshot.Decisions[0].Body != "<!-- statecraft-plan-set:planset-7 -->" || snapshot.Decisions[0].Actor != "external-reviewer" {
 		t.Fatal("merged history aliases snapshot-owned decisions")
+	}
+}
+
+func TestMergeSourceSnapshotInvalidatesReadinessOnHeadChange(t *testing.T) {
+	for _, head := range []string{"new-head", ""} {
+		t.Run("head="+head, func(t *testing.T) {
+			repo := domain.RepositoryRef{Owner: "acme", Name: "infra"}
+			review := domain.Review{
+				ID: "review-42", Repository: repo.FullName(), PullRequest: 42,
+				HeadSHA: "old-head", State: "ready_for_review",
+				Roots: []domain.Root{
+					{ID: "api", Name: "prod/api", Status: "planned"},
+					{ID: "db", Name: "prod/db", Status: "failed"},
+				},
+				Changes:   []domain.Change{{ID: "change-1", RootID: "api"}},
+				Findings:  []domain.Finding{{ID: "finding-1", Blocking: true}},
+				Decisions: []domain.ReviewDecision{{Actor: "reviewer", Decision: "approved", PlanSetID: "old-plan", CommitSHA: "old-head"}},
+			}
+			snapshot := domain.SourceReviewSnapshot{Change: domain.SourceChange{Repository: repo, Number: 42, HeadSHA: head}}
+			got := MergeSourceSnapshot(review, snapshot)
+			if got.HeadSHA != head || got.State != "stale" {
+				t.Fatalf("changed head retained readiness: %#v", got)
+			}
+			for _, root := range got.Roots {
+				if root.Status != "stale" {
+					t.Fatalf("root retained old execution status: %#v", root)
+				}
+			}
+			if !reflect.DeepEqual(got.Decisions, review.Decisions) || !reflect.DeepEqual(got.Changes, review.Changes) || !reflect.DeepEqual(got.Findings, review.Findings) {
+				t.Fatal("head change discarded historical evidence or decisions")
+			}
+			if review.HeadSHA != "old-head" || review.State != "ready_for_review" || review.Roots[0].Status != "planned" || review.Roots[1].Status != "failed" {
+				t.Fatal("head change mutated the input review or its roots")
+			}
+			// Another metadata refresh cannot make old evidence current again.
+			if refreshed := MergeSourceSnapshot(got, snapshot); refreshed.State != "stale" || refreshed.Roots[0].Status != "stale" {
+				t.Fatal("same-head refresh restored readiness without a new plan")
+			}
+		})
+	}
+}
+
+func TestMergeSourceSnapshotInitialHydration(t *testing.T) {
+	got := MergeSourceSnapshot(domain.Review{ID: "review-42", State: "pending"}, domain.SourceReviewSnapshot{
+		Change: domain.SourceChange{Repository: domain.RepositoryRef{Owner: "acme", Name: "infra"}, Number: 42, HeadSHA: "first-head"},
+	})
+	if got.State != "pending" || got.HeadSHA != "first-head" {
+		t.Fatalf("initial source hydration invalidated absent evidence: %#v", got)
 	}
 }
 

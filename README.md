@@ -152,7 +152,7 @@ uses a mock adapter behind the domain port.
 
 The Go module is `github.com/lanej/statecraft` and the frontend package is
 `statecraft`. Use Go 1.26 or later (required by the pinned GitHub client) and
-Node.js 22 or later for development.
+Node.js 22.6 or later for development and the frontend regression tests.
 
 ```sh
 # terminal 1

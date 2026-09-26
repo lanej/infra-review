@@ -57,7 +57,9 @@ The external-boundary thread is complete when:
 6. Atlantis apply webhook payloads map to provider-neutral lifecycle events;
 7. aggregate failures, policy checks, and discarded plans survive normalization;
 8. imported source reviews cannot replace Statecraft approvals or establish a
-   plan-set binding from editable text.
+   plan-set binding from editable text;
+9. a new source commit makes earlier evidence visibly stale, and decision labels
+   and counts distinguish approvals from other review outcomes.
 
 The adapters are deliberately **not** wired into production execution in this PR.
 Plan evidence ingestion, historical logs, plan-set persistence, GitHub App auth,

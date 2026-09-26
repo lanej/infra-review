@@ -38,11 +38,19 @@ func (s *SourceReviews) Load(ctx context.Context, repo domain.RepositoryRef, num
 }
 
 // MergeSourceSnapshot hydrates the source-control-owned portion of a Review.
-// Infrastructure evidence and Statecraft's authoritative decisions are preserved.
+// Infrastructure evidence and Statecraft's decisions are preserved as history.
+// A new head invalidates readiness until evidence is produced for that revision.
 // External review history is recorded separately: a source review or a plan-set
 // marker in its editable body cannot authorize an infrastructure plan.
 func MergeSourceSnapshot(review domain.Review, snapshot domain.SourceReviewSnapshot) domain.Review {
 	change := snapshot.Change
+	if review.HeadSHA != "" && review.HeadSHA != change.HeadSHA {
+		review.State = "stale"
+		review.Roots = slices.Clone(review.Roots)
+		for i := range review.Roots {
+			review.Roots[i].Status = "stale"
+		}
+	}
 	review.Repository = change.Repository.FullName()
 	review.PullRequest = change.Number
 	review.Title = change.Title

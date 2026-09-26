@@ -300,6 +300,11 @@ func buildCommandRequest(repository domain.RepositoryRef, ref, baseBranch string
 			key = "project:" + root.PlannerRef
 			request.Projects = append(request.Projects, root.PlannerRef)
 		} else {
+			// Atlantis expands these directory selectors across configured projects.
+			// Validate the original input before cleaning can hide a pattern segment.
+			if strings.ContainsAny(root.Directory, "*?[") {
+				return commandRequest{}, errors.New("Atlantis root directory must be a literal path, not a glob pattern")
+			}
 			directory, err := normalizeDirectory(root.Directory)
 			if err != nil {
 				return commandRequest{}, err

@@ -35,7 +35,7 @@ func (s *ReviewStore) GetReview(_ context.Context, id string) (domain.Review, er
 			{ID: "f2", Severity: "high", Category: "network", Title: "API network policy changes", ResourceAddress: "azurerm_network_security_rule.api", Blocking: false},
 		},
 		Decisions: []domain.ReviewDecision{
-			{Actor: "matt", Decision: "approved", PlanSetID: "planset-7", CreatedAt: "2026-09-25T20:10:00Z"},
+			{Actor: "matt", Decision: "approved", PlanSetID: "planset-7", CommitSHA: "abc1234", CreatedAt: "2026-09-25T20:10:00Z"},
 		},
 	}, nil
 }

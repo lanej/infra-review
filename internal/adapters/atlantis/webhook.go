@@ -47,7 +47,7 @@ func DecodeApplyWebhook(reader io.Reader) (domain.ApplyNotification, error) {
 	}
 
 	root := domain.RootSelector{
-		ProjectName: payload.ProjectName,
+		PlannerRef: payload.ProjectName,
 		Directory:   payload.Directory,
 		Workspace:   payload.Workspace,
 	}

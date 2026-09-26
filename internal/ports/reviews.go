@@ -2,7 +2,8 @@ package ports
 
 import (
 	"context"
-	"github.com/lanej/infra-review/internal/domain"
+
+	"github.com/lanej/statecraft/internal/domain"
 )
 
 type ReviewStore interface {

@@ -13,6 +13,12 @@ jobs:
         with:
           go-version-file: go.mod
           cache: false
+      - run: go mod tidy
+      - name: Print module sums
+        run: |
+          echo "__STATECRAFT_GO_SUM_BEGIN__"
+          cat go.sum
+          echo "__STATECRAFT_GO_SUM_END__"
       - run: go test ./...
 
   web:

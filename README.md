@@ -4,7 +4,7 @@
 
 Statecraft is an experimental workbench for infrastructure changes attached to GitHub pull requests. It is intended to become the primary place to work a change from planning through verification: understand what will happen across multiple infrastructure roots, investigate the dependency graph, assess policy and operational risk, diagnose Atlantis failures, collaborate with reviewers, and approve the exact plan being applied.
 
-> **Status:** early prototype. The TypeScript → Go workbench supports mock planning, resource inspection, policy acceptance, approval, apply, and verification. GitHub/Atlantis adapters exist but are not wired into the runtime. Durable plan evidence/history, Connect-generated handlers, GitHub App authentication, and authenticated approval flows remain to be implemented.
+> **Status:** early prototype. The TypeScript → Go workbench supports mock planning, resource inspection, policy acceptance, approval, apply, and verification. GitHub and Atlantis-native-HTTP adapters exist but are not wired into the runtime. Durable plan evidence/history, Connect-generated handlers, GitHub App authentication, and authenticated approval flows remain to be implemented.
 
 **[Open the legacy prototype](https://lanej.io/infra-review/)** · **[Product definition](./docs/product.md)** · **[Architecture](./docs/architecture.md)** · **[Integrations](./docs/integrations.md)** · **[Policy design](./docs/policies.md)**
 
@@ -58,7 +58,7 @@ The detailed statements and product invariants live in [docs/product.md](./docs/
 A GitHub pull request is the unit of work. One pull request may affect many independently planned infrastructure roots.
 
 1. **Discover roots.** Statecraft determines which roots are affected and tracks each independently.
-2. **Plan.** Atlantis produces plans and logs. Failed roots stay visible and actionable rather than disappearing into PR comments.
+2. **Plan.** Statecraft calls Atlantis's native HTTP API for plan execution and captures the resulting evidence. Failed roots stay visible and actionable rather than disappearing into PR comments; comments are not the integration API.
 3. **Assemble a PlanSet.** Successful root plans form one immutable proposal identified by the Git commit and root-plan digests.
 4. **Review.** The workbench presents a semantic change hierarchy, directed resource graph, findings, evidence, execution history, and reviewer state.
 5. **Discuss and revise.** Concerns attach to infrastructure objects. A new commit or plan creates a new proposal and makes affected prior approvals visibly stale.
@@ -89,8 +89,8 @@ The intended implementation separates a **TypeScript frontend** from a **Go + Co
 ```text
 GitHub                           Atlantis
   |                                |
-  | PRs, commits, identity         | plans, applies, logs
-  | reviews, checks                |
+  | PRs, commits, identity         | native HTTP API
+  | reviews, checks                | plan/apply; locks/drift later
   +---------------+----------------+
                   |
                   v

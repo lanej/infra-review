@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package statecraft.v1;
 
-option go_package = "github.com/lanej/infra-review/gen/statecraft/v1;statecraftv1";
+option go_package = "github.com/lanej/statecraft/gen/statecraft/v1;statecraftv1";
 
 service ReviewService {
   rpc GetReview(GetReviewRequest) returns (GetReviewResponse);

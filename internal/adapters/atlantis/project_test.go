@@ -9,7 +9,7 @@ func TestRootFromProject(t *testing.T) {
 	}
 
 	named := RootFromProject(Project{Name: "api", Directory: "prod/api", Workspace: "production"})
-	if named.ID != "api" || named.ProjectName != "api" {
+	if named.ID != "api" || named.PlannerRef != "api" {
 		t.Fatalf("named root = %#v", named)
 	}
 }

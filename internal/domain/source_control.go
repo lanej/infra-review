@@ -67,3 +67,9 @@ type ExternalReviewDecision struct {
 	CreatedAt time.Time
 	Source    string
 }
+
+type SourceReviewSnapshot struct {
+	Change    SourceChange
+	Files     []ChangedFile
+	Decisions []ExternalReviewDecision
+}

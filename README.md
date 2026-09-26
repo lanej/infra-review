@@ -143,3 +143,22 @@ The prototype exists to validate the review interaction model. The next implemen
 - **Failures are first-class.** Planning and application errors belong beside the change they prevented or interrupted.
 - **Evidence survives abstraction.** Summaries, findings, and future AI assistance always lead back to source evidence.
 - **Integrations stay at the boundary.** GitHub and Atlantis are adapters behind explicit ports.
+
+
+## Development
+
+The current steel thread separates the TypeScript frontend from a Go backend and uses a mock adapter behind the domain port.
+
+```sh
+# terminal 1
+make api
+
+# terminal 2
+cd web
+npm install
+npm run dev
+```
+
+The browser loads review `pr-1842` through the backend rather than importing fixture JSON. See [docs/steel-thread.md](./docs/steel-thread.md).
+
+The protobuf/Connect contract lives in `proto/statecraft/v1/review.proto`. Run `make generate` with Buf installed to generate Go and TypeScript bindings; the initial runnable thread retains a temporary JSON bridge until those generated handlers are committed.

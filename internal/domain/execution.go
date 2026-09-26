@@ -2,7 +2,7 @@ package domain
 
 type RootSelector struct {
 	ID          string
-	ProjectName string
+	PlannerRef string
 	Directory   string
 	Workspace   string
 }
@@ -11,8 +11,8 @@ func (r RootSelector) StableID() string {
 	if r.ID != "" {
 		return r.ID
 	}
-	if r.ProjectName != "" {
-		return r.ProjectName
+	if r.PlannerRef != "" {
+		return r.PlannerRef
 	}
 	return r.Directory + "::" + r.Workspace
 }
@@ -31,7 +31,7 @@ type PlanRun struct {
 
 type PlanAttempt struct {
 	RootID        string
-	ProjectName   string
+	PlannerRef   string
 	Directory     string
 	Workspace     string
 	Status        string
@@ -54,7 +54,7 @@ type ApplyRun struct {
 
 type ApplyAttempt struct {
 	RootID       string
-	ProjectName  string
+	PlannerRef  string
 	Directory    string
 	Workspace    string
 	Status       string

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/lanej/infra-review/internal/adapters/mock"
-	"github.com/lanej/infra-review/internal/service"
+	"github.com/lanej/statecraft/internal/adapters/mock"
+	"github.com/lanej/statecraft/internal/service"
 )
 
 func main() {

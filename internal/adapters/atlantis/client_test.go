@@ -28,6 +28,7 @@ func TestPlanMapsProjectResults(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(`{
 			"Error": null,
 			"Failure": "",

@@ -41,7 +41,7 @@ func NewClient(baseURL, token string, httpClient *http.Client) (*Client, error) 
 type commandRequest struct {
 	Repository string        `json:"Repository"`
 	Ref        string        `json:"Ref"`
-	BaseBranch string        `json:"BaseBranch,omitempty"`
+	BaseBranch string        `json:"base_branch,omitempty"`
 	Type       string        `json:"Type"`
 	Projects   []string      `json:"Projects,omitempty"`
 	Paths      []commandPath `json:"Paths,omitempty"`
@@ -49,8 +49,8 @@ type commandRequest struct {
 }
 
 type commandPath struct {
-	Directory string `json:"Directory,omitempty"`
-	Workspace string `json:"Workspace,omitempty"`
+	Directory string `json:"directory,omitempty"`
+	Workspace string `json:"workspace,omitempty"`
 }
 
 type commandResult struct {
@@ -152,18 +152,25 @@ func (c *Client) command(ctx context.Context, path string, payload commandReques
 	if err != nil {
 		return commandResult{}, fmt.Errorf("read Atlantis response: %w", err)
 	}
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		var remote apiError
-		_ = json.Unmarshal(data, &remote)
-		if remote.Error == "" {
-			remote.Error = strings.TrimSpace(string(data))
-		}
+	var remote apiError
+	_ = json.Unmarshal(data, &remote)
+	if remote.Error != "" {
 		return commandResult{}, fmt.Errorf("Atlantis %s: %s", response.Status, remote.Error)
 	}
 
 	var result commandResult
 	if err := json.Unmarshal(data, &result); err != nil {
 		return commandResult{}, fmt.Errorf("decode Atlantis response: %w", err)
+	}
+
+	// Atlantis currently returns HTTP 500 when command.Result.HasErrors() is true.
+	// ProjectResults still contain the per-root failure evidence Statecraft needs,
+	// so preserve a structured command result even on that status.
+	if len(result.ProjectResults) > 0 {
+		return result, nil
+	}
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return commandResult{}, fmt.Errorf("Atlantis %s: %s", response.Status, strings.TrimSpace(string(data)))
 	}
 	if result.Failure != "" || rawErrorPresent(result.Error) {
 		return commandResult{}, fmt.Errorf("Atlantis command failed: %s", result.Failure)

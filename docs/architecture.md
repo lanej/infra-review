@@ -8,10 +8,11 @@ This document establishes the implementation boundaries for the product defined 
 Statecraft uses a hexagonal (ports-and-adapters) architecture.
 
 The domain understands repositories, reviews, roots, plan sets, execution attempts,
-approvals, findings, resources, relationships, evidence, and source changes. It does
-not model GitHub pull requests or Atlantis command structs directly.
+approvals, findings, policies, violations, acceptances, resources, relationships,
+evidence, and source changes. GitHub, Atlantis, and OPA types stay in adapters.
 
-GitHub and Atlantis are required initial integrations, not architectural boundaries.
+GitHub and Atlantis are required initial integrations. OPA/Rego is the intended
+initial policy integration. These implementations do not define the domain model.
 
 ### Current outbound ports
 
@@ -42,6 +43,9 @@ integration metadata, but they must not leak into frontend contracts or core dom
 behavior.
 
 See [integrations.md](./integrations.md) for the concrete GitHub and Atlantis mapping.
+See [policies.md](./policies.md) for the proposed policy domain, assessment and
+action-policy ports, OPA boundary, and violation-acceptance workflow. Those policy
+capabilities are design contracts and are not implemented in the mock runtime yet.
 
 ## System boundaries
 
@@ -68,8 +72,9 @@ GitHub                                  Atlantis
            +-------------------+
 ```
 
-The frontend never consumes GitHub, Atlantis, or raw OpenTofu/Terraform
-representations as its application model.
+The frontend never consumes GitHub, Atlantis, OPA decision documents, or raw
+OpenTofu/Terraform representations as its application model. OPA evaluates policies
+through outbound domain ports; Statecraft services enforce the resulting decisions.
 
 ## Initial domain model
 
@@ -150,6 +155,24 @@ AUTHORIZED_BY, and RUNS_ON.
 A review concern derived from policy or analysis, including severity, blocking
 state, affected objects, explanation, status, and evidence.
 
+### Policy, PolicyEvaluation, and PolicyViolation
+
+A Policy is a versioned requirement. A PolicyEvaluation records assessment of an
+exact PlanSet and normalized input against immutable policy and reference-data
+versions, with coverage, outcomes, errors, and PolicyViolations. A policy-derived
+Finding references its violation and evidence. Severity, evaluation completeness,
+compliance, and action eligibility are separate concepts.
+
+### ViolationAcceptance and ActionDecision
+
+A ViolationAcceptance is an authorized, scoped, time-bounded decision to tolerate
+specified violations when policy permits. It preserves the violations and does not
+approve the PlanSet. An ActionDecision records whether a particular actor may
+perform a particular action, with requirements, reasons, and evidence. Statecraft
+enforces that decision against current context before recording or dispatching an
+action. Undefined or incomplete required evaluation cannot authorize approval or
+apply. See [policies.md](./policies.md) for identity and invalidation rules.
+
 ### ReviewDecision
 
 A human decision bound to an exact PlanSet and commit, with reviewer identity,
@@ -214,7 +237,7 @@ The backend owns:
 - OpenTofu/Terraform normalization;
 - plan-set identity and history;
 - resource graph construction/query;
-- findings and policy results;
+- policy assessment, violations, acceptance, and action eligibility;
 - review/approval state;
 - durable execution evidence;
 - audit history;
@@ -264,10 +287,11 @@ This is directional, not yet the final protobuf contract.
 
 ## Integration principle
 
-GitHub and Atlantis are adapters around the domain model, not the domain model
-itself.
+GitHub, Atlantis, and OPA integrate through adapters around the domain model.
 
 - GitHub owns source changes and repository identity.
 - Atlantis executes plan/apply workflows.
+- OPA evaluates infrastructure and workflow policies; Rego and engine types remain
+  inside the integration boundary.
 - Statecraft owns the durable infrastructure-specific review, diagnosis, evidence,
-  and human approval model.
+  violation acceptance, enforcement, and human approval model.

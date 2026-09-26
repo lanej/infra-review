@@ -52,6 +52,24 @@ The normal review path should summarize consequences rather than reproduce Terra
 
 Risk assessment must remain traceable to evidence. Destructive operations, replacements, privilege changes, network exposure, persistence changes, topology changes, and material capacity changes are first-class concepts.
 
+### Assess policies
+
+Policy is a first-class part of assessment. The workbench presents versioned
+policies, their violations, evaluation coverage, and the requirements governing
+review and execution in Statecraft terms. OPA/Rego is an implementation behind an
+adapter. See [policies.md](./policies.md) for the policy and acceptance design.
+
+### Resolve or accept violations
+
+> When a proposed change violates policy, explain the requirement, its consequences,
+> and the allowed resolution paths, so I can correct the change or request an
+> authorized, scoped acceptance with the necessary rationale and evidence.
+
+Accepting a violation preserves it as a recorded concern. Acceptance has scope,
+conditions, expiry, and an audit trail; it neither establishes policy compliance
+nor replaces approval of the exact PlanSet. Some policies prohibit acceptance.
+Missing or failed evaluation must remain visibly different from a satisfied policy.
+
 ### Understand impact
 
 > When a resource changes, show me what it depends on and what depends on it across root and module boundaries, so I can understand potential blast radius without reconstructing the architecture mentally.
@@ -131,6 +149,12 @@ A revert is not a magical rollback. It creates a new proposed change with its ow
 11. A successful apply is distinct from a verified outcome.
 12. Reverts use the same planning, assessment, approval, execution, and verification controls as forward changes.
 13. Statecraft is not a general-purpose infrastructure administration console.
+14. Policy-engine types and rule languages stay behind adapters; policies,
+    evaluations, violations, acceptance, and action eligibility are domain concepts.
+15. Accepting a violation preserves the violation and is distinct from approving a
+    PlanSet. Expired, revoked, or out-of-scope acceptance cannot satisfy a gate.
+16. Required policy evaluation must establish complete, current coverage. Missing
+    or undefined results cannot silently count as compliance or permission.
 
 ## Workbench surfaces
 

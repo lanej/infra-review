@@ -1,17 +1,12 @@
 package mock
 
 import (
-	"context"
 	"errors"
 
 	"github.com/lanej/statecraft/internal/domain"
 )
 
-type ReviewStore struct{}
-
-func NewReviewStore() *ReviewStore { return &ReviewStore{} }
-
-func (s *ReviewStore) GetReview(_ context.Context, id string) (domain.Review, error) {
+func baseReview(id string) (domain.Review, error) {
 	if id != "pr-1842" {
 		return domain.Review{}, errors.New("review not found")
 	}

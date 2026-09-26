@@ -32,6 +32,19 @@ Executor
 
 ReviewStore
   GetReview
+
+WorkflowStore (isolated demo sessions)
+  Create
+  Update (expected version, atomic mutation)
+
+DemoPlanner
+  ChangesForPlan (synthetic evidence only)
+
+PolicyEvaluator
+  EvaluatePlan
+
+ActionPolicy
+  EvaluateAction
 ```
 
 Ports will expand only when a domain use case requires them. In particular,
@@ -43,9 +56,11 @@ integration metadata, but they must not leak into frontend contracts or core dom
 behavior.
 
 See [integrations.md](./integrations.md) for the concrete GitHub and Atlantis mapping.
-See [policies.md](./policies.md) for the proposed policy domain, assessment and
-action-policy ports, OPA boundary, and violation-acceptance workflow. Those policy
-capabilities are design contracts and are not implemented in the mock runtime yet.
+See [policies.md](./policies.md) for the policy domain, assessment and
+action-policy ports, OPA boundary, and violation-acceptance workflow. The mock runtime
+now exercises these ports through `DemoWorkflow`; it has no access to the live
+`Planner`, `Executor`, or `SourceControl` ports. `DemoPlanner` is intentionally a
+separate simulation capability, not an alternative production execution path.
 
 ## System boundaries
 

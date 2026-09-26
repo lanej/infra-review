@@ -3,17 +3,26 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"net"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 
+	"github.com/lanej/statecraft/internal/adapters/httpapi"
 	"github.com/lanej/statecraft/internal/adapters/mock"
 	"github.com/lanej/statecraft/internal/service"
 )
 
 func main() {
-	reviews := service.NewReviews(mock.NewReviewStore())
+	store := mock.NewReviewStore()
+	reviews := service.NewReviews(store)
+	workflow := service.NewDemoWorkflow(store, mock.Planner{}, mock.Policies{}, mock.Policies{}, time.Now)
 
 	mux := http.NewServeMux()
+	demo := httpapi.DemoHandler(workflow, mock.SeedReview)
+	mux.Handle("/api/demos", demo)
+	mux.Handle("/api/demos/", demo)
 	mux.HandleFunc("/api/reviews/", func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, "/api/reviews/")
 		review, err := reviews.Get(r.Context(), id)
@@ -26,6 +35,12 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
-	log.Println("Statecraft API listening on http://127.0.0.1:8081")
-	log.Fatal(http.ListenAndServe("127.0.0.1:8081", mux))
+	port := os.Getenv("STATECRAFT_PORT")
+	if port == "" {
+		port = "8081"
+	}
+	address := net.JoinHostPort("127.0.0.1", port)
+	log.Printf("Statecraft mock API listening on http://%s (no live infrastructure)", address)
+	server := &http.Server{Addr: address, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	log.Fatal(server.ListenAndServe())
 }

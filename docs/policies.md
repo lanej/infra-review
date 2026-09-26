@@ -1,8 +1,11 @@
 # Policies, violations, and acceptance
 
-This is the design contract for the next policy integration. The current runtime
-still uses mock findings; the policy ports, OPA adapter, persistence, and acceptance
-actions described here are not implemented yet.
+This is the target design contract for policy integration. The mock workbench now
+implements `PolicyEvaluator` and `ActionPolicy` ports, normalized assessment and
+acceptance models, and the request → owner authorization → plan approval flow.
+The OPA adapter, authenticated actor/role enforcement, durable evidence and audit
+persistence, policy distribution, and production execution remain future work.
+See [the runnable scope](./steel-thread.md) for its deliberate limitations.
 
 Statecraft owns the meaning of a policy assessment and the decisions made from it.
 OPA evaluates Rego behind an adapter, just as GitHub and Atlantis supply their
@@ -38,7 +41,7 @@ Workflow authorization asks: **May this actor perform this action, given the cur
 evidence and requirements?** The same OPA adapter may supply both, but their inputs
 and outputs should have separate typed contracts.
 
-Proposed outbound ports, to be introduced alongside their application use cases:
+Outbound ports now exercised by the mock application use case:
 
 ```text
 PolicyEvaluator
@@ -198,6 +201,6 @@ the evidence, and the active acceptance together. A separate PlanSet approval is
 still required if the workflow policy calls for one; an expired acceptance blocks
 apply even if that approval remains in history.
 
-The next interactive design should exercise a hard prohibition, an advisory
+Further interactive scenarios should exercise a hard prohibition, an advisory
 violation, a permitted acceptance, an unauthorized acceptance request, a policy
 revision after approval, and an expired acceptance immediately before apply.

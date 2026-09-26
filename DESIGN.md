@@ -2,7 +2,7 @@
 
 ## Purpose and task
 
-Statecraft is a dense analytical workspace for understanding, diagnosing, assessing, discussing, approving, applying, verifying, and reverting infrastructure changes. The current prototype validates the review composition before the TypeScript frontend rewrite.
+Statecraft is a dense analytical workspace for understanding, diagnosing, assessing, discussing, approving, applying, verifying, and reverting infrastructure changes. The TypeScript workbench in `web/` now exercises the review lifecycle against an isolated mock backend. The original root-level prototype remains a separate composition reference.
 
 ## Principles and tradeoffs
 
@@ -15,11 +15,13 @@ Statecraft is a dense analytical workspace for understanding, diagnosing, assess
 
 ## Visual system and ownership
 
-Statecraft brand assets live under `assets/`. The prototype currently owns its CSS directly; the planned TypeScript implementation will move presentation into the frontend component system. Viewrule measures the rendered contract rather than prescribing components.
+Statecraft brand assets live under `assets/`. The running workbench owns its presentation in `web/src/style.css` and its view functions in `web/src/review.ts`. Viewrule measures the rendered contract rather than prescribing components.
 
 ## Behavior and resilience
 
-The current fixture supports selection between changed resources and a persistent resource inspector. The production interface must additionally cover loading, incomplete roots, failed plans/applies, stale approvals, large graphs, empty findings, and recovery states. Keyboard/focus and accessibility are mandatory but not fully assessed by this static prototype.
+The workbench preserves a resource inspector alongside root filtering and changed-resource comparison. Policy details show facts, consequences, unknowns, and evidence; acceptance and plan approval remain separate. The scenario selector exercises incomplete plans, stale approvals, expired acceptance, and partial execution recovery. Decision forms show exact plan/commit scope before committing a simulated action. Keyboard focus survives view changes and filtering. The responsive layout stacks the inspector below the change list on small screens.
+
+Large graph navigation, source editing, policy administration, and production actor/role enforcement remain future work.
 
 ## Requirements and verification
 
@@ -38,3 +40,10 @@ Mandatory product requirement, currently human-reviewed. A selected change shoul
 ## Evidence and unresolved decisions
 
 Product scope and assumed workflows are defined in `docs/product.md`; architecture is in `docs/architecture.md`. The current mock plan/state are synthetic. This baseline is not an approved visual reference. Composition rules should be recalibrated when the TypeScript frontend replaces the prototype.
+
+## UI change evidence
+
+UI pull requests include actual screenshots of the current running result. Use
+stable image URLs that render inline in the PR, and verify the URLs load before
+handoff. Keep the description focused on the final change and why it matters;
+automated checks report their own results.

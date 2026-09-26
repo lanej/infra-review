@@ -4,7 +4,7 @@
 
 Statecraft is an experimental workbench for infrastructure changes attached to GitHub pull requests. It is intended to become the primary place to work a change from planning through verification: understand what will happen across multiple infrastructure roots, investigate the dependency graph, assess policy and operational risk, diagnose Atlantis failures, collaborate with reviewers, and approve the exact plan being applied.
 
-> **Status:** early prototype. A TypeScript → Go mock-backed steel thread and initial GitHub/Atlantis adapters now exist, but the production integrations are not wired into the runtime. Durable plan evidence/history, Connect-generated handlers, GitHub App authentication, and authenticated approval flows remain to be implemented.
+> **Status:** early prototype. The TypeScript → Go workbench supports mock planning, resource inspection, policy acceptance, approval, apply, and verification. GitHub/Atlantis adapters exist but are not wired into the runtime. Durable plan evidence/history, Connect-generated handlers, GitHub App authentication, and authenticated approval flows remain to be implemented.
 
 **[Open the prototype](https://lanej.io/infra-review/)** · **[Product definition](./docs/product.md)** · **[Architecture](./docs/architecture.md)** · **[Integrations](./docs/integrations.md)** · **[Policy design](./docs/policies.md)**
 
@@ -105,7 +105,7 @@ OPA/Rego is the intended policy integration behind the same adapter boundary.
 Statecraft models policies, evaluations, violations, scoped acceptance, and action
 eligibility independently of the engine. Acceptance preserves a violation and is
 separate from approving a plan. This boundary and workflow are specified in
-[docs/policies.md](./docs/policies.md); the policy runtime is not implemented yet.
+[docs/policies.md](./docs/policies.md); the workbench exercises those ports with deterministic mock policies; the OPA adapter remains to be implemented.
 
 See [docs/architecture.md](./docs/architecture.md) for the initial domain and service boundaries.
 
@@ -170,8 +170,10 @@ npm ci
 npm run dev
 ```
 
-The browser loads review `pr-1842` through the backend rather than importing
-fixture JSON. See [docs/steel-thread.md](./docs/steel-thread.md).
+The browser creates an isolated review session through the backend. The workflow
+selector includes incomplete plans, stale approvals, expired acceptance, and partial
+apply recovery. All decisions and execution are simulated; no credentials are
+required. See [docs/steel-thread.md](./docs/steel-thread.md).
 
 The protobuf/Connect contract lives in `proto/statecraft/v1/review.proto`.
 Run `make generate` with Buf installed to generate Go and TypeScript bindings;

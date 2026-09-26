@@ -14,13 +14,13 @@ func TestReviewDecision(t *testing.T) {
 		User:        &gh.User{Login: gh.String("josh")},
 		State:       gh.String("APPROVED"),
 		CommitID:    gh.String("abc123"),
-		Body:        gh.String("looks good"),
+		Body:        gh.String("looks good\n\n<!-- statecraft-plan-set:planset-7 -->"),
 		HTMLURL:     gh.String("https://github.example/review/42"),
 		SubmittedAt: &gh.Timestamp{Time: when},
 	}
 
 	got := reviewDecision(review)
-	if got.ID != "42" || got.Actor != "josh" || got.Decision != "approved" || got.CommitSHA != "abc123" {
+	if got.ID != "42" || got.Actor != "josh" || got.Decision != "approved" || got.CommitSHA != "abc123" || got.PlanSetID != "planset-7" {
 		t.Fatalf("unexpected decision: %#v", got)
 	}
 	if !got.CreatedAt.Equal(when) {

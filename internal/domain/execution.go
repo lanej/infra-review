@@ -1,10 +1,10 @@
 package domain
 
 type RootSelector struct {
-	ID          string
+	ID         string
 	PlannerRef string
-	Directory   string
-	Workspace   string
+	Directory  string
+	Workspace  string
 }
 
 func (r RootSelector) StableID() string {
@@ -30,14 +30,14 @@ type PlanRun struct {
 }
 
 type PlanAttempt struct {
-	RootID        string
+	RootID       string
 	PlannerRef   string
-	Directory     string
-	Workspace     string
-	Status        string
-	Output        string
-	Failure       string
-	ErrorPresent  bool
+	Directory    string
+	Workspace    string
+	Status       string
+	Output       string
+	Failure      string
+	ErrorPresent bool
 }
 
 type ApplyRequest struct {
@@ -54,7 +54,7 @@ type ApplyRun struct {
 
 type ApplyAttempt struct {
 	RootID       string
-	PlannerRef  string
+	PlannerRef   string
 	Directory    string
 	Workspace    string
 	Status       string

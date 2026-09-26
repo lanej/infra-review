@@ -17,10 +17,10 @@ func RootFromProject(project Project) domain.RootSelector {
 		workspace = "default"
 	}
 	return domain.RootSelector{
-		ID:          stableProjectID(project.Name, project.Directory, workspace),
+		ID:         stableProjectID(project.Name, project.Directory, workspace),
 		PlannerRef: project.Name,
-		Directory:   project.Directory,
-		Workspace:   workspace,
+		Directory:  project.Directory,
+		Workspace:  workspace,
 	}
 }
 

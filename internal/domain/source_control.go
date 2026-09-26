@@ -61,6 +61,7 @@ type ExternalReviewDecision struct {
 	Actor     string
 	Decision  string
 	CommitSHA string
+	PlanSetID string
 	Body      string
 	URL       string
 	CreatedAt time.Time

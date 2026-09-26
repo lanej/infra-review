@@ -6,7 +6,7 @@ Statecraft is an experimental workbench for infrastructure changes attached to G
 
 > **Status:** early prototype. A TypeScript → Go mock-backed steel thread and initial GitHub/Atlantis adapters now exist, but the production integrations are not wired into the runtime. Durable plan evidence/history, Connect-generated handlers, GitHub App authentication, and authenticated approval flows remain to be implemented.
 
-**[Open the prototype](https://lanej.io/infra-review/)** · **[Product definition](./docs/product.md)** · **[Architecture](./docs/architecture.md)** · **[Integrations](./docs/integrations.md)**
+**[Open the prototype](https://lanej.io/infra-review/)** · **[Product definition](./docs/product.md)** · **[Architecture](./docs/architecture.md)** · **[Integrations](./docs/integrations.md)** · **[Policy design](./docs/policies.md)**
 
 ## Change lifecycle
 
@@ -100,6 +100,12 @@ GitHub                           Atlantis
 The backend follows a **hexagonal architecture**. GitHub and Atlantis are the first adapters, not the domain model. Core behavior works in terms of repositories, reviews, roots, plan sets, execution attempts, resources, changes, relationships, findings, discussions, decisions, verification, and reverts.
 
 The frontend should never need to understand raw Atlantis objects or use Terraform/OpenTofu JSON as its application model.
+
+OPA/Rego is the intended policy integration behind the same adapter boundary.
+Statecraft models policies, evaluations, violations, scoped acceptance, and action
+eligibility independently of the engine. Acceptance preserves a violation and is
+separate from approving a plan. This boundary and workflow are specified in
+[docs/policies.md](./docs/policies.md); the policy runtime is not implemented yet.
 
 See [docs/architecture.md](./docs/architecture.md) for the initial domain and service boundaries.
 

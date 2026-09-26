@@ -88,7 +88,7 @@ func (c *Client) Plan(ctx context.Context, req domain.PlanRequest) (domain.PlanR
 		status := projectStatus(project.Error, project.Failure, project.PlanSuccess != nil)
 		attempt := domain.PlanAttempt{
 			RootID:       rootID(req.Roots, project.ProjectName, project.RepoRelDir, project.Workspace),
-			ProjectName:  project.ProjectName,
+			PlannerRef:    project.ProjectName,
 			Directory:    project.RepoRelDir,
 			Workspace:    project.Workspace,
 			Status:       status,
@@ -113,7 +113,7 @@ func (c *Client) Apply(ctx context.Context, req domain.ApplyRequest) (domain.App
 		status := projectStatus(project.Error, project.Failure, project.ApplySuccess != "")
 		run.Attempts = append(run.Attempts, domain.ApplyAttempt{
 			RootID:       rootID(req.Roots, project.ProjectName, project.RepoRelDir, project.Workspace),
-			ProjectName:  project.ProjectName,
+			PlannerRef:    project.ProjectName,
 			Directory:    project.RepoRelDir,
 			Workspace:    project.Workspace,
 			Status:       status,
@@ -195,8 +195,8 @@ func buildCommandRequest(repository, ref, baseBranch string, pullRequest int64, 
 		PR:         pullRequest,
 	}
 	for _, root := range roots {
-		if root.ProjectName != "" {
-			request.Projects = append(request.Projects, root.ProjectName)
+		if root.PlannerRef != "" {
+			request.Projects = append(request.Projects, root.PlannerRef)
 			continue
 		}
 		request.Paths = append(request.Paths, commandPath{
@@ -224,7 +224,7 @@ func rawErrorPresent(raw json.RawMessage) bool {
 
 func rootID(roots []domain.RootSelector, project, directory, workspace string) string {
 	for _, root := range roots {
-		if project != "" && root.ProjectName == project {
+		if project != "" && root.PlannerRef == project {
 			return root.StableID()
 		}
 		if project == "" && root.Directory == directory && root.Workspace == workspace {
